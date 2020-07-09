@@ -68,7 +68,13 @@ app.post('/login', (req, res) => {
 
 // create a game
 app.post('/game/create', (req, res) => {
-  logger.log('info', `got game create: ${req.body.gameId} from ${req.session.userId}`);
+  const userId = req.session.userId;
+  if (typeof userId === undefined){
+    res.send({ result: '400', message: 'user must log in before drawing a card.' });
+    logger.log('info', `user tried to create a game before logging in.`);
+    return;
+  }
+  logger.log('info', `got game create: ${req.body.gameId} from ${userId}`);
   const id = uuidv4();
   logger.log('info', `it is ${id}`);
   const parts: Participant[] = [];
@@ -80,20 +86,26 @@ app.post('/game/create', (req, res) => {
 
 // draw a card in the game
 app.post('/game/:gameId/draw', (req, res) => {
+  const userId = req.session.userId;
   const gameId = req.params.gameId;
-  logger.log('info', `got request to draw a card in ${gameId} from ${req.session.userId}`);
+  if (typeof gameId === undefined){
+    res.send({ result: '400', message: 'user must log in before drawing a card.' });
+    logger.log('info', `user tried to draw a card in ${gameId} before logging in.`);
+    return;
+  }
+  logger.log('info', `got request to draw a card in ${gameId} from ${userId}`);
   const participants: Participant[] = gamePopulation.get(gameId);
   // does the game exist?
   if (participants == null){
     res.send({ result: '400', message: 'game does not exist or you are not in that game.' });
-    logger.log('warn', `${req.session.userId} tried to draw in game ${gameId} that didn't exist.`);
+    logger.log('warn', `${userId} tried to draw in game ${gameId} that didn't exist.`);
     return;
   }
-  const participant = participants.find(part => part.userId === req.session.userId);
+  const participant = participants.find(part => part.userId === userId);
   // are they a participant of that game?
   if (participant == null){
     res.send({ result: '400', message: 'game does not exist or you are not in that game.' });
-    logger.log('warn', `${req.session.userId} tried to draw in game ${gameId} that he wasn't a participant.`);
+    logger.log('warn', `${userId} tried to draw in game ${gameId} that he wasn't a participant.`);
     return;
   }
   // draw a card
@@ -109,6 +121,11 @@ app.post('/game/:gameId/draw', (req, res) => {
 
 app.post('/game/:gameId/join', (req, res) => {
   const gameId = req.params.gameId;
+  if (typeof gameId === undefined){
+    res.send({ result: '400', message: 'user must log in before joining a game.' });
+    logger.log('info', `user tried to join game ${gameId} before logging in.`);
+    return;
+  }
   logger.log('info', `got request to join ${gameId} from ${req.session.userId}`);
   const participants = gamePopulation.get(gameId);
   // does the game exist?
