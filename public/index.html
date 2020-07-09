@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="utf-8">
+      <title>Express session demo</title>
+  </head>
+  <body>
+    <h1>Choose an action.</h1>
+    <button id="login" type="button" title="Simulate login">
+      Simulate login
+    </button>
+    <button id="logout" type="button" title="Simulate logout">
+      Simulate logout
+    </button>
+    <button id="wsButton" type="button" title="Open WebSocket connection">
+      Open WebSocket connection
+    </button>
+    <button id="wsCreateGame" type="button" title="Create Game">
+      Create Game
+    </button>
+    <input id="txtGameId" type="textbox" title="gameId"></input>
+    <button id="wsJoinGame" type="button" title="Join Game">
+      Join Game
+    </button>
+    <button id="drawCard" type="button" title="Draw Card">
+      Draw Card
+    </button>
+    <pre id="messages" style="height: 400px; overflow: scroll"></pre>
+    <script src="app.js"></script>
+  </body>
+</html>
