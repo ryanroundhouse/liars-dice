@@ -1,4 +1,4 @@
 export interface Participant{
     userId: string,
-    cards: any[]
+    name: string
 }

@@ -5,6 +5,7 @@
   const logout = document.querySelector('#logout');
   const login = document.querySelector('#login');
   const txtGameId = document.getElementById('txtGameId');
+  const btnStartGame = document.getElementById('startGame');
 
   function showMessage(message) {
     messages.textContent += `\n${message}`;
@@ -58,20 +59,20 @@
       ws = null;
     };
   };
-  
-  drawCard.onclick = function(){
+
+  btnStartGame.onclick = function(){
     const gameId = txtGameId.value;
-    showMessage(`posting to /game/${gameId}/draw`);
-    fetch(`/game/${gameId}/draw`, { 
-        method: 'POST', 
-        credentials: 'same-origin'
+    showMessage(`posting to /game/${gameId}/start`);
+    fetch(`/game/${gameId}/start`, { 
+      method: 'POST', 
+      credentials: 'same-origin'
     })
     .then(handleResponse)
     .then(showMessage)
     .catch(function (err) {
       showMessage(err.message);
     });
-  };
+  }
 
   wsCreateGame.onclick = function () {
     var msg = JSON.stringify({gameId: 100});
@@ -106,10 +107,15 @@
 
   wsJoinGame.onclick = function () {
     const gameId = txtGameId.value;
+    var name = JSON.stringify({name: 'bob'});
     showMessage(`posting to /game/${gameId}/join`);
     fetch(`/game/${gameId}/join`, { 
         method: 'POST', 
         credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: name
       })
       .then(handleResponse)
       .then(showMessage)

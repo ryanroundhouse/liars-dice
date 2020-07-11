@@ -5,11 +5,14 @@ import bodyParser from "body-parser";
 import { v4 as uuidv4 } from 'uuid';
 import WebSocket from "ws";
 import { Participant } from "./interfaces/participant";
+import { Game } from "./interfaces/game";
+import { GameMessage } from "./interfaces/game-message";
+import { MessageType } from "./enums/messageType";
 
 const app = express();
 const port = 8080; // default port to listen
-const map = new Map<string, WebSocket>();
-const gamePopulation = new Map<string, Participant[]>();
+const wsConnections = new Map<string, WebSocket>();
+const gamePopulation = new Map<string, Game>();
 const secret = 'alibubalay';
 
 // create logger
@@ -65,58 +68,38 @@ app.post('/login', (req, res) => {
   res.send({ result: 'OK', message: 'Session created' });
 });
 
+// log out from session
+app.delete('/logout', (request, response) => {
+  const ws = wsConnections.get(request.session.userId);
+
+  logger.log('info', `Destroying session from ${request.session.userId} `);
+  request.session.destroy(() => {
+    if (ws) {
+      ws.close();
+    }
+    response.send({ result: 'OK', message: 'Session destroyed' });
+  });
+});
 
 // create a game
 app.post('/game/create', (req, res) => {
-  const userId = req.session.userId;
+  const userId: string = req.session.userId;
   if (typeof userId === undefined){
-    res.send({ result: '400', message: 'user must log in before drawing a card.' });
+    res.send({ result: '400', message: 'user must log in before creating a game.' });
     logger.log('info', `user tried to create a game before logging in.`);
     return;
   }
   logger.log('info', `got game create: ${req.body.gameId} from ${userId}`);
   const id = uuidv4();
-  logger.log('info', `it is ${id}`);
-  const parts: Participant[] = [];
-  gamePopulation.set(id, parts);
+  logger.log('info', `gameId is ${id}`);
+  const game: Game = {
+    started: false,
+    participants: []
+  }
+  gamePopulation.set(id, game);
   logger.verbose(`gamePopulation is now:`);
   gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
   res.send({ result: 'OK', message: {gameId: id} });
-});
-
-// draw a card in the game
-app.post('/game/:gameId/draw', (req, res) => {
-  const userId = req.session.userId;
-  const gameId = req.params.gameId;
-  if (typeof gameId === undefined){
-    res.send({ result: '400', message: 'user must log in before drawing a card.' });
-    logger.log('info', `user tried to draw a card in ${gameId} before logging in.`);
-    return;
-  }
-  logger.log('info', `got request to draw a card in ${gameId} from ${userId}`);
-  const participants: Participant[] = gamePopulation.get(gameId);
-  // does the game exist?
-  if (participants == null){
-    res.send({ result: '400', message: 'game does not exist or you are not in that game.' });
-    logger.log('warn', `${userId} tried to draw in game ${gameId} that didn't exist.`);
-    return;
-  }
-  const participant = participants.find(part => part.userId === userId);
-  // are they a participant of that game?
-  if (participant == null){
-    res.send({ result: '400', message: 'game does not exist or you are not in that game.' });
-    logger.log('warn', `${userId} tried to draw in game ${gameId} that he wasn't a participant.`);
-    return;
-  }
-  // draw a card
-  participant.cards.push('newCard');
-  logger.log('info', `${participant.userId} now has ${participant.cards.length} cards`);
-  logger.verbose(`gamePopulation is now:`);
-  gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
-  participants.forEach(part => {
-    map.get(part.userId).send("someone got a card");
-  });
-  res.send({ result: 'OK', message: 'card drawn' });
 });
 
 app.post('/game/:gameId/join', (req, res) => {
@@ -127,17 +110,17 @@ app.post('/game/:gameId/join', (req, res) => {
     return;
   }
   logger.log('info', `got request to join ${gameId} from ${req.session.userId}`);
-  const participants = gamePopulation.get(gameId);
+  const game = gamePopulation.get(gameId);
   // does the game exist?
-  if (participants == null){
+  if (game == null){
     res.send({ result: '400', message: 'game does not exist.' });
     logger.log('info', `${req.session.userId} tried to join game ${gameId} that didn't exist.`);
     return;
   }
   // is the user already a participant of a game?
   let alreadyInGame = false;
-  gamePopulation.forEach((value: Participant[]) => {
-    if (value.find(val => val.userId === req.session.userId) != null){
+  gamePopulation.forEach((selectedGame: Game) => {
+    if (typeof selectedGame.participants.find(selectedParticipant => selectedParticipant.userId === req.session.userId) !== "undefined"){
       alreadyInGame = true;
     }
   })
@@ -146,30 +129,105 @@ app.post('/game/:gameId/join', (req, res) => {
     logger.log('info', `${req.session.userId} tried to join game ${gameId} when they were already in a game.`);
     return;
   }
+  // did they provide a name
+  const name = req.body.name;
+  if (!name){
+    res.send({ result: '400', message: 'you must supply a name in the body.' });
+    logger.log('info', `${req.session.userId} tried to join game ${gameId} but didn't provide a name.`);
+    return;
+  }
+  // is the game already started
+  if (game.started){
+    res.send({ result: '400', message: 'game has already started.' });
+    logger.log('info', `${req.session.userId} tried to join game ${gameId} but it already started.`);
+    return;
+  }
   // join the game
   const participant: Participant = {
     userId: req.session.userId,
-    cards: []
+    name
   }
-  participants.push(participant);
-  gamePopulation.set(gameId, participants);
+  res.send({ result: 'OK', message: game.participants });
+  game.participants.push(participant);
+  gamePopulation.set(gameId, game);
   logger.verbose(`gamePopulation is now:`);
   gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
-  res.send({ result: 'OK', message: 'game joined' });
+  sendGameMessage(gameId, MessageType.PlayerJoined, participant);
 });
 
-// log out from session
-app.delete('/logout', (request, response) => {
-  const ws = map.get(request.session.userId);
+app.post('/game/:gameId/start', (req, res) => {
+  const gameId = req.params.gameId;
+  if (typeof gameId === undefined){
+    res.send({ result: '400', message: 'user must log in before starting a game.' });
+    logger.log('info', `user tried to start a game ${gameId} before logging in.`);
+    return;
+  }
+  logger.log('info', `got request to start ${gameId} from ${req.session.userId}`);
+  const game = gamePopulation.get(gameId);
+  // does the game exist?
+  if (game == null){
+    res.send({ result: '400', message: 'game does not exist.' });
+    logger.log('info', `${req.session.userId} tried to start game ${gameId} that didn't exist.`);
+    return;
+  }
+  // is the game already started
+  if (game.started){
+    res.send({ result: '400', message: 'game has already started.' });
+    logger.log('info', `${req.session.userId} tried to start game ${gameId} but it already started.`);
+    return;
+  }
+  game.started = true;
+  res.send({ result: 'OK', message: 'true' });
+  logger.verbose(`gamePopulation is now:`);
+  gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
+  sendGameMessage(gameId, MessageType.GameStarted, null);
+});
 
-  logger.log('info', `Destroying session from ${request.session.userId} `);
-  request.session.destroy(() => {
-    if (ws) {
-      ws.close();
-    }
-    response.send({ result: 'OK', message: 'Session destroyed' });
+function sendGameMessage(gameId: string, messageType: MessageType, message: any){
+  const game = gamePopulation.get(gameId);
+  const gameMessage: GameMessage = {
+    messageType,
+    message
+  }
+  game.participants.forEach((participant: Participant) => {
+    wsConnections.get(participant.userId).send(JSON.stringify(gameMessage));
   });
-});
+}
+
+// // draw a card in the game
+// app.post('/game/:gameId/draw', (req, res) => {
+//   const userId = req.session.userId;
+//   const gameId = req.params.gameId;
+//   if (typeof gameId === undefined){
+//     res.send({ result: '400', message: 'user must log in before drawing a card.' });
+//     logger.log('info', `user tried to draw a card in ${gameId} before logging in.`);
+//     return;
+//   }
+//   logger.log('info', `got request to draw a card in ${gameId} from ${userId}`);
+//   const participants: Participant[] = gamePopulation.get(gameId);
+//   // does the game exist?
+//   if (participants == null){
+//     res.send({ result: '400', message: 'game does not exist or you are not in that game.' });
+//     logger.log('warn', `${userId} tried to draw in game ${gameId} that didn't exist.`);
+//     return;
+//   }
+//   const participant = participants.find(part => part.userId === userId);
+//   // are they a participant of that game?
+//   if (participant == null){
+//     res.send({ result: '400', message: 'game does not exist or you are not in that game.' });
+//     logger.log('warn', `${userId} tried to draw in game ${gameId} that he wasn't a participant.`);
+//     return;
+//   }
+//   // draw a card
+//   participant.cards.push('newCard');
+//   logger.log('info', `${participant.userId} now has ${participant.cards.length} cards`);
+//   logger.verbose(`gamePopulation is now:`);
+//   gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
+//   participants.forEach(part => {
+//     map.get(part.userId).send("someone got a card");
+//   });
+//   res.send({ result: 'OK', message: 'card drawn' });
+// });
 
 //
 // Create HTTP server by ourselves.
@@ -198,7 +256,7 @@ wss.on('connection', (ws, request) => {
   // hacky workaround to use express-session with ws.
   const userId = (request as any).session.userId;
 
-  map.set(userId.toString(), ws);
+  wsConnections.set(userId.toString(), ws);
 
   ws.on('message', (message) => {
     logger.log('info', `Received message ${message} from user ${userId}`);
@@ -220,6 +278,6 @@ wss.on('connection', (ws, request) => {
   });
 
   ws.on('close', () => {
-    map.delete(userId.toString());
+    wsConnections.delete(userId.toString());
   });
 });
