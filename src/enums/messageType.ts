@@ -1,4 +1,5 @@
 export enum MessageType{
     PlayerJoined,
-    GameStarted
+    GameStarted,
+    RoundStarted
 }

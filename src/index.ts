@@ -94,7 +94,8 @@ app.post('/game/create', (req, res) => {
   logger.log('info', `gameId is ${id}`);
   const game: Game = {
     started: false,
-    participants: []
+    participants: [],
+    gameMessageLog: []
   }
   gamePopulation.set(id, game);
   logger.verbose(`gamePopulation is now:`);
@@ -145,7 +146,9 @@ app.post('/game/:gameId/join', (req, res) => {
   // join the game
   const participant: Participant = {
     userId: req.session.userId,
-    name
+    name,
+    numberOfDice: 5,
+    roll: []
   }
   res.send({ result: 'OK', message: game.participants });
   game.participants.push(participant);
@@ -180,8 +183,24 @@ app.post('/game/:gameId/start', (req, res) => {
   res.send({ result: 'OK', message: 'true' });
   logger.verbose(`gamePopulation is now:`);
   gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
+  game.gameMessageLog.push()
   sendGameMessage(gameId, MessageType.GameStarted, null);
+  startRound(gameId);
 });
+
+function startRound(gameId: string){
+  const game = gamePopulation.get(gameId);
+  game.participants.forEach(participant => {
+    for (let i = 0; i < participant.numberOfDice; i++){
+      participant.roll.push(getRandomInt(6));
+    }
+    sendGameMessageToOne(gameId, participant.userId, MessageType.RoundStarted, participant);
+  });
+}
+
+function getRandomInt(max: number) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
 
 function sendGameMessage(gameId: string, messageType: MessageType, message: any){
   const game = gamePopulation.get(gameId);
@@ -189,9 +208,20 @@ function sendGameMessage(gameId: string, messageType: MessageType, message: any)
     messageType,
     message
   }
+  game.gameMessageLog.push(gameMessage);
   game.participants.forEach((participant: Participant) => {
     wsConnections.get(participant.userId).send(JSON.stringify(gameMessage));
   });
+}
+
+function sendGameMessageToOne(gameId: string, participantId: string, messageType: MessageType, message: any){
+  const game = gamePopulation.get(gameId);
+  const gameMessage: GameMessage = {
+    messageType,
+    message
+  }
+  game.gameMessageLog.push(gameMessage);
+  wsConnections.get(participantId).send(JSON.stringify(gameMessage));
 }
 
 // // draw a card in the game
