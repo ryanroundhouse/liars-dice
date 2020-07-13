@@ -6,6 +6,10 @@
   const login = document.querySelector('#login');
   const txtGameId = document.getElementById('txtGameId');
   const btnStartGame = document.getElementById('startGame');
+  const claimQuantity = document.getElementById('claimQuantity');
+  const claimValue = document.getElementById('claimValue');
+  const claim = document.getElementById('claim');
+  const cheat = document.getElementById('cheat');
 
   function showMessage(message) {
     messages.textContent += `\n${message}`;
@@ -73,6 +77,76 @@
       showMessage(err.message);
     });
   }
+  
+  claim.onclick = function(){
+    const gameId = txtGameId.value;
+    const quantity = claimQuantity.value;
+    const value = claimValue.value;
+    if (!ws) {
+      showMessage('No WebSocket connection');
+      return;
+    }
+
+    const gameMessage = {
+      messageType: 3,
+      message: {
+        quantity: quantity,
+        value: value,
+        cheat: false
+      }
+    }
+    var msg = JSON.stringify(gameMessage);
+
+    showMessage(`posting ${msg} to /game/${gameId}/claim`);
+    fetch(`/game/${gameId}/claim`, { 
+        method: 'POST', 
+        credentials: 'same-origin', 
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: msg
+      })
+      .then(handleResponse)
+      .then(showMessage)
+      .catch(function (err) {
+        showMessage(err.message);
+      });
+  }
+  
+  cheat.onclick = function(){
+    const gameId = txtGameId.value;
+    const quantity = claimQuantity.value;
+    const value = claimValue.value;
+    if (!ws) {
+      showMessage('No WebSocket connection');
+      return;
+    }
+
+    const gameMessage = {
+      messageType: 3,
+      message: {
+        quantity: null,
+        value: null,
+        cheat: true
+      }
+    }
+    var msg = JSON.stringify(gameMessage);
+
+    showMessage(`posting ${msg} to /game/${gameId}/claim`);
+    fetch(`/game/${gameId}/claim`, { 
+        method: 'POST', 
+        credentials: 'same-origin', 
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: msg
+      })
+      .then(handleResponse)
+      .then(showMessage)
+      .catch(function (err) {
+        showMessage(err.message);
+      });
+  }
 
   wsCreateGame.onclick = function () {
     var msg = JSON.stringify({gameId: 100});
@@ -90,19 +164,6 @@
       .catch(function (err) {
     showMessage(err.message);
   });
-    // if (!ws) {
-    //   showMessage('No WebSocket connection');
-    //   return;
-    // }
-
-    // const newGame = {
-    //   type: 'create',
-    //   gameId: 100
-    // }
-
-    // const message = JSON.stringify(newGame,null, 2);
-    // ws.send(message);
-    // showMessage(`Sent ${message}`);
   };
 
   wsJoinGame.onclick = function () {

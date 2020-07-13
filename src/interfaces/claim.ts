@@ -1,5 +1,9 @@
+import { Participant } from "./participant";
+
 export interface Claim{
-    count: number,
+    quantity: number,
     value: number,
-    cheat: boolean
+    cheat: boolean,
+    nextPlayerId?: string,
+    playerId?: string
 }

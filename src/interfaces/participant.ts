@@ -2,5 +2,6 @@ export interface Participant{
     userId: string,
     name: string,
     numberOfDice: number,
-    roll: number[]
+    roll: number[],
+    eliminated: boolean
 }
