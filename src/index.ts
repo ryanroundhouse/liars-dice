@@ -450,3 +450,5 @@ wss.on('connection', (ws, request) => {
     wsConnections.delete(userId.toString());
   });
 });
+
+module.exports = server;
