@@ -94,7 +94,7 @@ app.delete('/logout', (request, response) => {
 // create a game
 app.post('/game/create', (req, res) => {
   const userId: string = req.session.userId;
-  if (typeof userId === undefined){
+  if (userId === undefined){
     res.status(400).send({ result: '400', message: 'user must log in before creating a game.' });
     logger.log('info', `user tried to create a game before logging in.`);
     return;

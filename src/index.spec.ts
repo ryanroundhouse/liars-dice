@@ -4,6 +4,7 @@ import "chai-http";
 import { Server } from "ws";
 import chaiHttp from "chai-http";
 import session from "express-session";
+import { response } from "express";
 
 chai.use(chaiHttp);
 chai.should();
@@ -33,6 +34,7 @@ describe("loading express", () => {
                 done();
              });
     });
+
     describe("login tests", () => {
         it("login creates a session successfully", (done) => {
             chai.request(server)
@@ -63,6 +65,7 @@ describe("loading express", () => {
 
         });
     });
+
     describe("logout tests",() => {
         it("destroy returns 400 if not logged in", (done) => {
             chai.request(server)
@@ -114,6 +117,39 @@ describe("loading express", () => {
                                     thirdResponse.should.have.status(200);
                                     done();
                                 });
+                        });
+                });
+        });
+    });
+    
+    describe("create game tests", () => {
+        it("can't create game if not logged in", (done) => {
+            chai.request(server)
+                .post('/game/create')
+                .end((err, res) => {
+                    if (err){
+                        return done(err);
+                    }
+                    res.should.have.status(400);
+                    done();
+                });
+        });
+        it("can create game if logged in", (done) => {
+            chai.request(server)
+                .post('/login')
+                .end((firstError, firstResponse) => {
+                    if (firstError){
+                        return done(firstError);
+                    }
+                    chai.request(server)
+                        .post('/game/create')
+                        .set('Cookie', cookie(firstResponse))
+                        .end((secondError, secondResponse) => {
+                            if (secondError){
+                                return done(secondError);
+                            }
+                            secondResponse.should.have.status(200);
+                            done();
                         });
                 });
         });
