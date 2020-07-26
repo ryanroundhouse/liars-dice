@@ -37,6 +37,7 @@
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
     "mocha": "^8.0.1",
+    "mock-session": "0.0.5",
     "ts-node": "^8.10.2",
     "tslint": "^6.1.2",
     "typescript": "^3.9.6"

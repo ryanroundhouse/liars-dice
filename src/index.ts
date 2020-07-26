@@ -42,6 +42,7 @@ if (process.env.NODE_ENV !== 'production') {
 // create a unique sessions per visitor stored as a cookie.
 const sessionParser = session({
   secret,
+  name: "my-session",
   resave: true,
   saveUninitialized: true,
   cookie: {
@@ -61,8 +62,9 @@ const server = app.listen( port, () => {
 // create session
 app.post('/login', (req, res) => {
   // send error if the user is already logged in
+  logger.debug(`session set to ${req.session.userId}`);
   if (req.session.userId != null){
-    res.send({result: '400', message: 'already logged in.'});
+    res.status(400).send({status: '400', message: 'already logged in.'});
     return;
   }
   // create set visitor's session
@@ -74,6 +76,10 @@ app.post('/login', (req, res) => {
 
 // log out from session
 app.delete('/logout', (request, response) => {
+  if (request.session.userId === undefined){
+    response.status(400).send({result: '400', message: 'you\'re not logged in.'});
+    return;
+  }
   const ws = wsConnections.get(request.session.userId);
 
   logger.log('info', `Destroying session from ${request.session.userId} `);
@@ -89,7 +95,7 @@ app.delete('/logout', (request, response) => {
 app.post('/game/create', (req, res) => {
   const userId: string = req.session.userId;
   if (typeof userId === undefined){
-    res.send({ result: '400', message: 'user must log in before creating a game.' });
+    res.status(400).send({ result: '400', message: 'user must log in before creating a game.' });
     logger.log('info', `user tried to create a game before logging in.`);
     return;
   }

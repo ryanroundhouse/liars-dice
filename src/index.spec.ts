@@ -3,6 +3,7 @@ import chai from "chai";
 import "chai-http";
 import { Server } from "ws";
 import chaiHttp from "chai-http";
+import session from "express-session";
 
 chai.use(chaiHttp);
 chai.should();
@@ -32,4 +33,94 @@ describe("loading express", () => {
                 done();
              });
     });
+    describe("login tests", () => {
+        it("login creates a session successfully", (done) => {
+            chai.request(server)
+                .post('/login')
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    done();
+                });
+        });
+        it("login fails if already logged in", (done) => {
+            chai.request(server)
+                .post('/login')
+                .end((firstError, firstResponse) => {
+                    if (firstError){
+                        return done(firstError);
+                    }
+                    chai.request(server)
+                        .post('/login')
+                        .set('Cookie', cookie(firstResponse))
+                        .end((secondError, secondResponse) => {
+                            if (secondError){
+                                return done(secondError);
+                            }
+                            secondResponse.should.have.status(400);
+                            done();
+                        });
+                });
+
+        });
+    });
+    describe("logout tests",() => {
+        it("destroy returns 400 if not logged in", (done) => {
+            chai.request(server)
+                .delete('/logout')
+                .end((err, res) => {
+                    if (err){
+                        return done(err);
+                    }
+                    res.should.have.status(400);
+                    done();
+                });
+        });
+        it("destroy returns 200 if logged in", (done) => {
+            chai.request(server)
+                .post('/login')
+                .end((firstError, firstResponse) => {
+                    if (firstError){
+                        return done(firstError);
+                    }
+                    chai.request(server)
+                        .delete('/logout')
+                        .set('Cookie', cookie(firstResponse))
+                        .end((secondError, secondResponse) => {
+                            if (secondError){
+                                return done(secondError);
+                            }
+                            secondResponse.should.have.status(200);
+                            done();
+                        });
+                });
+        });
+        it("can login again after logging out", (done) => {
+            chai.request(server)
+                .post('/login')
+                .end((firstError, firstResponse) => {
+                    if (firstError){
+                        return done(firstError);
+                    }
+                    chai.request(server)
+                        .delete('/logout')
+                        .set('Cookie', cookie(firstResponse))
+                        .end((secondError, secondResponse) => {
+                            if (secondError){
+                                return done(secondError);
+                            }
+                            chai.request(server)
+                                .post('/login')
+                                .end((thirdError, thirdResponse) => {
+                                    thirdResponse.should.have.status(200);
+                                    done();
+                                });
+                        });
+                });
+        });
+    });
 });
+
+function cookie(res: any) {
+    const setCookie = res.headers['set-cookie'];
+    return (setCookie && setCookie[0]) || undefined;
+  }
