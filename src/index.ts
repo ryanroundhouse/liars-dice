@@ -134,48 +134,54 @@ app.post('/game/create', (req, res) => {
 });
 
 app.post('/game/:gameId/join', (req, res) => {
-  const gameId = req.params.gameId;
-  if (typeof gameId === undefined){
+  const userId: string = req.session.userId;
+  if (userId === undefined){
     res.status(400).send({ result: '400', message: 'user must log in before joining a game.' });
-    logger.log('info', `user tried to join game ${gameId} before logging in.`);
+    logger.log('info', `user tried to join a game before logging in.`);
     return;
   }
-  logger.log('info', `got request to join ${gameId} from ${req.session.userId}`);
+  const gameId = req.params.gameId;
+  if (typeof gameId === undefined){
+    res.status(400).send({ result: '400', message: 'no game specified.' });
+    logger.log('info', `user ${userId} tried to join a game without specifying the game.`);
+    return;
+  }
+  logger.log('info', `got request to join ${gameId} from ${userId}`);
   const game = gamePopulation.get(gameId);
   // does the game exist?
   if (game == null){
     res.status(400).send({ result: '400', message: 'game does not exist.' });
-    logger.log('info', `${req.session.userId} tried to join game ${gameId} that didn't exist.`);
+    logger.log('info', `${userId} tried to join game ${gameId} that didn't exist.`);
     return;
   }
   // is the user already a participant of a game?
   let alreadyInGame = false;
   gamePopulation.forEach((selectedGame: Game) => {
-    if (typeof selectedGame.participants.find(selectedParticipant => selectedParticipant.userId === req.session.userId) !== "undefined"){
+    if (typeof selectedGame.participants.find(selectedParticipant => selectedParticipant.userId === userId) !== "undefined"){
       alreadyInGame = true;
     }
   });
   if (alreadyInGame){
     res.status(400).send({ result: '400', message: 'you can only be in 1 game.' });
-    logger.log('info', `${req.session.userId} tried to join game ${gameId} when they were already in a game.`);
+    logger.log('info', `${userId} tried to join game ${gameId} when they were already in a game.`);
     return;
   }
   // did they provide a name
   const name = req.body.name;
   if (!name){
     res.status(400).send({ result: '400', message: 'you must supply a name in the body.' });
-    logger.log('info', `${req.session.userId} tried to join game ${gameId} but didn't provide a name.`);
+    logger.log('info', `${userId} tried to join game ${gameId} but didn't provide a name.`);
     return;
   }
   // is the game already started
   if (game.started){
     res.status(400).send({ result: '400', message: 'game has already started.' });
-    logger.log('info', `${req.session.userId} tried to join game ${gameId} but it already started.`);
+    logger.log('info', `${userId} tried to join game ${gameId} but it already started.`);
     return;
   }
   // join the game
   const participant: Participant = {
-    userId: req.session.userId,
+    userId: userId,
     name,
     numberOfDice: 5,
     roll: [],

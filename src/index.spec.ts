@@ -1,4 +1,4 @@
-process.env.NODE_ENV = 'test'
+//process.env.NODE_ENV = 'test'
 
 import "mocha";
 import chai from "chai";
@@ -238,7 +238,7 @@ describe("loading express", () => {
         });
     });
     describe("join game tests",() => {
-        it("join game returns 400 if not logged in", (done) => {
+        it("join game fails if not logged in", (done) => {
             chai.request(server)
                 .post('/game/1/join')
                 .end((err, res) => {
@@ -247,6 +247,45 @@ describe("loading express", () => {
                     }
                     res.should.have.status(400);
                     done();
+                });
+        });
+        it("join game fails if game doesn't exist", (done) => {
+            chai.request(server)
+                .post('/login')
+                .end((firstError, firstResponse) => {
+                    if (firstError){
+                        return done(firstError);
+                    }
+                    firstResponse.should.have.status(200);
+                    chai.request(server)
+                        .post('/game/10000000/join')
+                        .set('Cookie', cookie(firstResponse))
+                        .end((secondError, secondResponse) => {
+                            if (secondError){
+                                return done(secondError);
+                            }
+                            secondResponse.should.have.status(400);
+                            done();
+                        });
+                });
+        });
+        it("join game fails if no name supplied", (done) => {
+            chai.request(server)
+                .post('/login')
+                .end((firstError, firstResponse) => {
+                    if (firstError){
+                        return done(firstError);
+                    }
+                    firstResponse.should.have.status(200);
+                    chai.request(server)
+                        .post('/game/1/join')
+                        .end((err, res) => {
+                            if (err){
+                                return done(err);
+                            }
+                            res.should.have.status(400);
+                            done();
+                        });
                 });
         });
     });
