@@ -39,6 +39,10 @@ if (process.env.NODE_ENV !== 'production') {
     }));
 }
 
+if (process.env.NODE_ENV === 'test'){
+  logger.transports.forEach((t) => (t.silent = true));
+}
+
 // create a unique sessions per visitor stored as a cookie.
 const sessionParser = session({
   secret,
@@ -99,11 +103,27 @@ app.post('/game/create', (req, res) => {
     logger.log('info', `user tried to create a game before logging in.`);
     return;
   }
+  // is the user already a participant of a game?
+  logger.debug(`currently ${gamePopulation.size} games created`);
+  let alreadyInGame = false;
+  gamePopulation.forEach((selectedGame: Game) => {
+    if (typeof selectedGame.participants.find(selectedParticipant => selectedParticipant.userId === userId) !== "undefined"){
+      if (!selectedGame.finished){
+        alreadyInGame = true;
+      }
+    }
+  });
+  if (alreadyInGame){
+    res.status(400).send({ result: '400', message: 'you can\'t start a game when you\'re in a running game.' });
+    logger.log('info', `${userId} tried to create a game when they were already in a running game.`);
+    return;
+  }
   logger.log('info', `got game create: ${req.body.gameId} from ${userId}`);
   const id = uuidv4();
   logger.log('info', `gameId is ${id}`);
   const game: Game = {
     started: false,
+    finished: false,
     participants: [],
     gameMessageLog: []
   }
@@ -116,7 +136,7 @@ app.post('/game/create', (req, res) => {
 app.post('/game/:gameId/join', (req, res) => {
   const gameId = req.params.gameId;
   if (typeof gameId === undefined){
-    res.send({ result: '400', message: 'user must log in before joining a game.' });
+    res.status(400).send({ result: '400', message: 'user must log in before joining a game.' });
     logger.log('info', `user tried to join game ${gameId} before logging in.`);
     return;
   }
@@ -124,7 +144,7 @@ app.post('/game/:gameId/join', (req, res) => {
   const game = gamePopulation.get(gameId);
   // does the game exist?
   if (game == null){
-    res.send({ result: '400', message: 'game does not exist.' });
+    res.status(400).send({ result: '400', message: 'game does not exist.' });
     logger.log('info', `${req.session.userId} tried to join game ${gameId} that didn't exist.`);
     return;
   }
@@ -134,22 +154,22 @@ app.post('/game/:gameId/join', (req, res) => {
     if (typeof selectedGame.participants.find(selectedParticipant => selectedParticipant.userId === req.session.userId) !== "undefined"){
       alreadyInGame = true;
     }
-  })
+  });
   if (alreadyInGame){
-    res.send({ result: '400', message: 'you can only be in 1 game.' });
+    res.status(400).send({ result: '400', message: 'you can only be in 1 game.' });
     logger.log('info', `${req.session.userId} tried to join game ${gameId} when they were already in a game.`);
     return;
   }
   // did they provide a name
   const name = req.body.name;
   if (!name){
-    res.send({ result: '400', message: 'you must supply a name in the body.' });
+    res.status(400).send({ result: '400', message: 'you must supply a name in the body.' });
     logger.log('info', `${req.session.userId} tried to join game ${gameId} but didn't provide a name.`);
     return;
   }
   // is the game already started
   if (game.started){
-    res.send({ result: '400', message: 'game has already started.' });
+    res.status(400).send({ result: '400', message: 'game has already started.' });
     logger.log('info', `${req.session.userId} tried to join game ${gameId} but it already started.`);
     return;
   }
@@ -298,6 +318,7 @@ app.post('/game/:gameId/claim', (req, res) => {
         winner: activePlayers[0]
       }
       sendGameMessage(gameId, MessageType.GameOver, gameOver);
+      game.finished = true;
     }
     else{
       startRound(gameId);
@@ -390,7 +411,13 @@ function sendGameMessage(gameId: string, messageType: MessageType, message: any)
   }
   game.gameMessageLog.push(gameMessage);
   game.participants.forEach((participant: Participant) => {
-    wsConnections.get(participant.userId).send(JSON.stringify(gameMessage));
+    const participantConnection = wsConnections.get(participant.userId);
+    if (participantConnection){
+      wsConnections.get(participant.userId).send(JSON.stringify(gameMessage));
+    }
+    else{
+      logger.error(`no connection found to send gameMessage to ${participant.userId}`);
+    }
   });
 }
 

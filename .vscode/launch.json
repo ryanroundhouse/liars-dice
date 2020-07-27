@@ -17,6 +17,23 @@
         "console": "integratedTerminal",
         "internalConsoleOptions": "neverOpen",
         "protocol": "inspector"
-    },
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Mocha Selected File",
+        "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+        "args": [
+            "-r",
+            "ts-node/register",
+            "--timeout",
+            "999999",
+            "--colors",
+            "${file}",
+        ],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "protocol": "inspector"
+      },
     ]
   }

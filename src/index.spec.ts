@@ -1,3 +1,5 @@
+process.env.NODE_ENV = 'test'
+
 import "mocha";
 import chai from "chai";
 import "chai-http";
@@ -51,6 +53,7 @@ describe("loading express", () => {
                     if (firstError){
                         return done(firstError);
                     }
+                    firstResponse.should.have.status(200);
                     chai.request(server)
                         .post('/login')
                         .set('Cookie', cookie(firstResponse))
@@ -111,9 +114,13 @@ describe("loading express", () => {
                             if (secondError){
                                 return done(secondError);
                             }
+                            secondResponse.should.have.status(200);
                             chai.request(server)
                                 .post('/login')
                                 .end((thirdError, thirdResponse) => {
+                                    if (thirdError){
+                                        return done(thirdError);
+                                    }
                                     thirdResponse.should.have.status(200);
                                     done();
                                 });
@@ -141,6 +148,7 @@ describe("loading express", () => {
                     if (firstError){
                         return done(firstError);
                     }
+                    firstResponse.should.have.status(200);
                     chai.request(server)
                         .post('/game/create')
                         .set('Cookie', cookie(firstResponse))
@@ -151,6 +159,94 @@ describe("loading express", () => {
                             secondResponse.should.have.status(200);
                             done();
                         });
+                });
+        });
+        it("can join own created game if logged in", (done) => {
+            chai.request(server)
+                .post('/login')
+                .end((firstError, firstResponse) => {
+                    if (firstError){
+                        return done(firstError);
+                    }
+                    firstResponse.should.have.status(200);
+                    chai.request(server)
+                        .post('/game/create')
+                        .set('Cookie', cookie(firstResponse))
+                        .end((secondError, secondResponse) => {
+                            if (secondError){
+                                return done(secondError);
+                            }
+                            const gameId: string = secondResponse.body.message.gameId;
+                            secondResponse.should.have.status(200);
+                            const joinGameBody = {name: 'ryan'};
+                            const joinGameUrl: string = `/game/${gameId}/join`;
+                            chai.request(server)
+                                .post(joinGameUrl)
+                                .send(joinGameBody)
+                                .set('Cookie', cookie(firstResponse))
+                                .end((thirdError, thirdResponse) => {
+                                    if (thirdError){
+                                        return done(thirdError);
+                                    }
+                                    thirdResponse.should.have.status(200);
+                                    done();
+                                });
+                        });
+                });
+        });
+        it("can\'t create a new game if in a game", (done) => {
+            chai.request(server)
+                .post('/login')
+                .end((firstError, firstResponse) => {
+                    if (firstError){
+                        return done(firstError);
+                    }
+                    firstResponse.should.have.status(200);
+                    chai.request(server)
+                        .post('/game/create')
+                        .set('Cookie', cookie(firstResponse))
+                        .end((secondError, secondResponse) => {
+                            if (secondError){
+                                return done(secondError);
+                            }
+                            const gameId: string = secondResponse.body.message.gameId;
+                            secondResponse.should.have.status(200);
+                            const joinGameBody = {name: 'ryan'};
+                            const joinGameUrl: string = `/game/${gameId}/join`;
+                            chai.request(server)
+                                .post(joinGameUrl)
+                                .send(joinGameBody)
+                                .set('Cookie', cookie(firstResponse))
+                                .end((thirdError, thirdResponse) => {
+                                    if (thirdError){
+                                        return done(thirdError);
+                                    }
+                                    thirdResponse.should.have.status(200);
+                                    chai.request(server)
+                                        .post('/game/create')
+                                        .set('Cookie', cookie(firstResponse))
+                                        .end((secondError, secondResponse) => {
+                                            if (secondError){
+                                                return done(secondError);
+                                            }
+                                            secondResponse.should.have.status(400);
+                                            done();
+                                        });
+                                });
+                        });
+                });
+        });
+    });
+    describe("join game tests",() => {
+        it("join game returns 400 if not logged in", (done) => {
+            chai.request(server)
+                .post('/game/1/join')
+                .end((err, res) => {
+                    if (err){
+                        return done(err);
+                    }
+                    res.should.have.status(400);
+                    done();
                 });
         });
     });
