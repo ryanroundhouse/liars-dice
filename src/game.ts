@@ -81,4 +81,34 @@ export class Game{
         existingGame.participants.push(participant);
         return {ok: true, value: existingGame.participants};
     }
+
+    startGame(userId: string, gameId: string, gamePopulation: Map<string, GameInterface>): Result<string>{
+        if (!userId){
+            return { ok: false, message: "no userId provided" };
+        }
+        if (!gamePopulation){
+            return { ok: false, message: "no gamePopulation provided" };
+        }
+        if (!gameId){
+            return { ok: false, message: "no gameId provided" };
+        }
+        const existingGame = gamePopulation.get(gameId);
+        // does the game exist?
+        if (existingGame == null){
+            return { ok: false, message: "game does not exist." };
+        }
+        if (existingGame.started){
+            return { ok: false, message: "game already started." };
+        }
+        let inGame = false;
+        if (existingGame.participants.find(selectedParticipant => selectedParticipant.userId === userId)){
+            inGame = true;
+        }
+        if (!inGame){
+            return {ok: false, message: "you must be in the game to start the game."};
+        }
+
+        existingGame.started = true;
+        return { ok: true, value: gameId };
+    }
 }

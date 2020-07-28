@@ -227,4 +227,68 @@ describe("game functionality", () => {
             result.ok.should.be.true;
         });
     });
+    describe("start game functionality", () => {
+        it("can't start game if you don't provide a userID", () => {
+            const game: Game = new Game(logger);
+            const result: Result<string> = game.startGame(null, "gameId", new Map<string, GameInterface>());
+            result.ok.should.be.false;
+        });
+        it("can't start game if you don't provide a gameID", () => {
+            const game: Game = new Game(logger);
+            const result: Result<string> = game.startGame("userId", null, new Map<string, GameInterface>());
+            result.ok.should.be.false;
+        });
+        it("can't start game if you don't provide a gamePopulation", () => {
+            const game: Game = new Game(logger);
+            const result: Result<string> = game.startGame("userId", "gameId", null);
+            result.ok.should.be.false;
+        });
+        it("can't start game if it doesn't exist", () => {
+            const game: Game = new Game(logger);
+            const result: Result<string> = game.startGame("userId", "gameId", new Map<string, GameInterface>());
+            result.ok.should.be.false;
+        });
+        it("can't start game if it's already started.", () => {
+            const playerId: string = "test";
+            const participant: Participant = {
+                userId: playerId,
+                name: "test player",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: true
+            }
+            const game: Game = new Game(logger);
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const gameWithPlayer: GameInterface = {
+                started: true,
+                finished: false,
+                participants: [participant],
+                gameMessageLog: []
+            }
+            gamePopulation.set("gameId", gameWithPlayer);
+            const result: Result<string> = game.startGame("userId", "gameId", gamePopulation);
+            result.ok.should.be.false;
+        });
+        it("can't start game if you're not in it.", () => {
+            const playerId: string = "not test";
+            const participant: Participant = {
+                userId: playerId,
+                name: "test player",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: true
+            }
+            const game: Game = new Game(logger);
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const gameWithPlayer: GameInterface = {
+                started: false,
+                finished: false,
+                participants: [participant],
+                gameMessageLog: []
+            }
+            gamePopulation.set("gameId", gameWithPlayer);
+            const result: Result<string> = game.startGame("userId", "gameId", gamePopulation);
+            result.ok.should.be.false;
+        });
+    });
 });

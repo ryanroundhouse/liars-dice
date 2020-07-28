@@ -136,29 +136,22 @@ app.post('/game/:gameId/join', (req, res) => {
 
 app.post('/game/:gameId/start', (req, res) => {
   const gameId = req.params.gameId;
+  const userId = req.session.userId;
   if (typeof gameId === undefined){
     res.send({ result: '400', message: 'user must log in before starting a game.' });
     logger.log('info', `user tried to start a game ${gameId} before logging in.`);
     return;
   }
-  logger.log('info', `got request to start ${gameId} from ${req.session.userId}`);
-  const existingGame = gamePopulation.get(gameId);
-  // does the game exist?
-  if (existingGame == null){
-    res.send({ result: '400', message: 'game does not exist.' });
-    logger.log('info', `${req.session.userId} tried to start game ${gameId} that didn't exist.`);
+  logger.log('info', `got request to start ${gameId} from ${userId}`);
+
+  const result = game.startGame(userId, gameId, gamePopulation);
+  if (!result.ok){
+    res.status(400).send(result);
     return;
   }
-  // is the game already started
-  if (existingGame.started){
-    res.send({ result: '400', message: 'game has already started.' });
-    logger.log('info', `${req.session.userId} tried to start game ${gameId} but it already started.`);
-    return;
-  }
-  existingGame.started = true;
-  res.send({ result: 'OK', message: 'true' });
+  
+  res.send({ result: 'OK', message: gameId });
   logger.verbose(`gamePopulation is now:`);
-  gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
   sendGameMessage(gameId, MessageType.GameStarted, null);
   startRound(gameId);
 });
