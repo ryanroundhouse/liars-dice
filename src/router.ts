@@ -5,32 +5,35 @@ import bodyParser from "body-parser";
 import { v4 as uuidv4 } from 'uuid';
 import WebSocket from "ws";
 import { Participant } from "./interfaces/participant";
-import { Game } from "./interfaces/game";
+import { GameInterface } from "./interfaces/game-interface";
 import { GameMessage } from "./interfaces/game-message";
 import { MessageType } from "./enums/messageType";
 import { RoundResults } from "./interfaces/round-results";
 import { RoundSetup } from "./interfaces/round-setup";
 import { Claim } from "./interfaces/claim";
 import { GameOver } from "./interfaces/game-over";
+import { Game } from "./game";
+
+// create logger
+const logger = winston.createLogger({
+  level: 'debug',
+  format: winston.format.combine(
+    // winston.format.timestamp({format: 'YY-MM-DD HH:MM:SS'}),
+    winston.format.json()
+),
+  transports: [
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log' }),
+  ],
+});
 
 const app = express();
 const port = 8080; // default port to listen
 const wsConnections = new Map<string, WebSocket>();
-const gamePopulation = new Map<string, Game>();
+const gamePopulation = new Map<string, GameInterface>();
 const secret = 'alibubalay';
+const game = new Game(logger);
 
-// create logger
-const logger = winston.createLogger({
-    level: 'debug',
-    format: winston.format.combine(
-      // winston.format.timestamp({format: 'YY-MM-DD HH:MM:SS'}),
-      winston.format.json()
-  ),
-    transports: [
-      new winston.transports.File({ filename: 'error.log', level: 'error' }),
-      new winston.transports.File({ filename: 'combined.log' }),
-    ],
-});
 // If we're not in production then log to the `console` with the format:
 // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
 if (process.env.NODE_ENV !== 'production') {
@@ -75,7 +78,7 @@ app.post('/login', (req, res) => {
   const id = uuidv4();
   logger.log('info', `Setting session for user ${id}`);
   req.session.userId = id;
-  res.send({ result: 'OK', message: 'Session created' });
+  res.send({ result: 'OK', message: `Session created as ${id}` });
 });
 
 // log out from session
@@ -103,34 +106,12 @@ app.post('/game/create', (req, res) => {
     logger.log('info', `user tried to create a game before logging in.`);
     return;
   }
-  // is the user already a participant of a game?
-  logger.debug(`currently ${gamePopulation.size} games created`);
-  let alreadyInGame = false;
-  gamePopulation.forEach((selectedGame: Game) => {
-    if (typeof selectedGame.participants.find(selectedParticipant => selectedParticipant.userId === userId) !== "undefined"){
-      if (!selectedGame.finished){
-        alreadyInGame = true;
-      }
-    }
-  });
-  if (alreadyInGame){
-    res.status(400).send({ result: '400', message: 'you can\'t start a game when you\'re in a running game.' });
-    logger.log('info', `${userId} tried to create a game when they were already in a running game.`);
+  const result = game.createGame(userId, gamePopulation);
+  if (!result.ok){
+    res.status(400).send(result);
     return;
   }
-  logger.log('info', `got game create: ${req.body.gameId} from ${userId}`);
-  const id = uuidv4();
-  logger.log('info', `gameId is ${id}`);
-  const game: Game = {
-    started: false,
-    finished: false,
-    participants: [],
-    gameMessageLog: []
-  }
-  gamePopulation.set(id, game);
-  logger.verbose(`gamePopulation is now:`);
-  gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
-  res.send({ result: 'OK', message: {gameId: id} });
+  res.send({ result: 'OK', gameId: result });
 });
 
 app.post('/game/:gameId/join', (req, res) => {
@@ -141,58 +122,16 @@ app.post('/game/:gameId/join', (req, res) => {
     return;
   }
   const gameId = req.params.gameId;
-  if (typeof gameId === undefined){
-    res.status(400).send({ result: '400', message: 'no game specified.' });
-    logger.log('info', `user ${userId} tried to join a game without specifying the game.`);
-    return;
-  }
-  logger.log('info', `got request to join ${gameId} from ${userId}`);
-  const game = gamePopulation.get(gameId);
-  // does the game exist?
-  if (game == null){
-    res.status(400).send({ result: '400', message: 'game does not exist.' });
-    logger.log('info', `${userId} tried to join game ${gameId} that didn't exist.`);
-    return;
-  }
-  // is the user already a participant of a game?
-  let alreadyInGame = false;
-  gamePopulation.forEach((selectedGame: Game) => {
-    if (typeof selectedGame.participants.find(selectedParticipant => selectedParticipant.userId === userId) !== "undefined"){
-      alreadyInGame = true;
-    }
-  });
-  if (alreadyInGame){
-    res.status(400).send({ result: '400', message: 'you can only be in 1 game.' });
-    logger.log('info', `${userId} tried to join game ${gameId} when they were already in a game.`);
-    return;
-  }
-  // did they provide a name
   const name = req.body.name;
-  if (!name){
-    res.status(400).send({ result: '400', message: 'you must supply a name in the body.' });
-    logger.log('info', `${userId} tried to join game ${gameId} but didn't provide a name.`);
+
+  const result = game.joinGame(userId, gameId, name, gamePopulation);
+  if (!result.ok){
+    res.status(400).send(result);
     return;
   }
-  // is the game already started
-  if (game.started){
-    res.status(400).send({ result: '400', message: 'game has already started.' });
-    logger.log('info', `${userId} tried to join game ${gameId} but it already started.`);
-    return;
-  }
-  // join the game
-  const participant: Participant = {
-    userId: userId,
-    name,
-    numberOfDice: 5,
-    roll: [],
-    eliminated: false
-  }
-  res.send({ result: 'OK', message: game.participants });
-  game.participants.push(participant);
-  gamePopulation.set(gameId, game);
-  logger.verbose(`gamePopulation is now:`);
-  gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
-  sendGameMessage(gameId, MessageType.PlayerJoined, participant);
+  const participants: Participant[] = (result as any).value;
+  res.send({result: 'OK', message: participants});
+  sendGameMessage(gameId, MessageType.PlayerJoined, participants[participants.length - 1]);
 });
 
 app.post('/game/:gameId/start', (req, res) => {
@@ -203,20 +142,20 @@ app.post('/game/:gameId/start', (req, res) => {
     return;
   }
   logger.log('info', `got request to start ${gameId} from ${req.session.userId}`);
-  const game = gamePopulation.get(gameId);
+  const existingGame = gamePopulation.get(gameId);
   // does the game exist?
-  if (game == null){
+  if (existingGame == null){
     res.send({ result: '400', message: 'game does not exist.' });
     logger.log('info', `${req.session.userId} tried to start game ${gameId} that didn't exist.`);
     return;
   }
   // is the game already started
-  if (game.started){
+  if (existingGame.started){
     res.send({ result: '400', message: 'game has already started.' });
     logger.log('info', `${req.session.userId} tried to start game ${gameId} but it already started.`);
     return;
   }
-  game.started = true;
+  existingGame.started = true;
   res.send({ result: 'OK', message: 'true' });
   logger.verbose(`gamePopulation is now:`);
   gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
@@ -233,20 +172,20 @@ app.post('/game/:gameId/claim', (req, res) => {
   }
   const claim: GameMessage = req.body;
   logger.log('info', `got request to make a claim ${JSON.stringify(claim)} in ${gameId} from ${req.session.userId}`);
-  const game = gamePopulation.get(gameId);
+  const existingGame = gamePopulation.get(gameId);
   // does the game exist?
-  if (game == null){
+  if (existingGame == null){
     res.send({ result: '400', message: 'game does not exist.' });
     logger.log('info', `${req.session.userId} tried to start game ${gameId} that didn't exist.`);
     return;
   }
   // is the game not started
-  if (!game.started){
+  if (!existingGame.started){
     res.send({ result: '400', message: 'game has\'nt started yet.' });
     logger.log('info', `${req.session.userId} tried to make a claim in ${gameId} but it hasn't started yet.`);
     return;
   }
-  const lastMessage = game.gameMessageLog[game.gameMessageLog.length - 1];
+  const lastMessage = existingGame.gameMessageLog[existingGame.gameMessageLog.length - 1];
   logger.debug(`lastMessage was ${JSON.stringify(lastMessage)}`);
   // can't claim if it's not your turn
   if (lastMessage.messageType === MessageType.Claim){
@@ -264,7 +203,7 @@ app.post('/game/:gameId/claim', (req, res) => {
   }
   if (lastMessage.messageType === MessageType.RoundStarted){
     // find the starting player's roundstarted.  It's not always the last one.
-    const reverseGameMessageLog = game.gameMessageLog.slice().reverse();
+    const reverseGameMessageLog = existingGame.gameMessageLog.slice().reverse();
     const startingPlayerMessage = reverseGameMessageLog.find(gameMessage => gameMessage.messageType === MessageType.RoundStarted && (gameMessage.message as RoundSetup).startingPlayer);
     logger.debug(`found startingPlayer from: ${JSON.stringify(startingPlayerMessage)}`);
     if ((startingPlayerMessage.message as RoundSetup).participant.userId !== req.session.userId){
@@ -282,7 +221,7 @@ app.post('/game/:gameId/claim', (req, res) => {
       return;
     }
     const lastClaim = lastMessage.message as Claim;
-    const challengedPlayer = game.participants.find(participant => participant.userId === lastClaim.playerId);
+    const challengedPlayer = existingGame.participants.find(participant => participant.userId === lastClaim.playerId);
     const numberOfThatRoll = countNumberOfThatRoll(challengedPlayer.roll, lastClaim.value);
     let roundResults: RoundResults;
     if (lastClaim.quantity > numberOfThatRoll){
@@ -292,7 +231,7 @@ app.post('/game/:gameId/claim', (req, res) => {
         challengedPlayer.eliminated = true;
       }
       roundResults = {
-        callingPlayer: game.participants.find(participant => participant.userId === req.session.userId),
+        callingPlayer: existingGame.participants.find(participant => participant.userId === req.session.userId),
         calledPlayer: challengedPlayer,
         claim: lastClaim,
         claimSuccess: true,
@@ -301,13 +240,13 @@ app.post('/game/:gameId/claim', (req, res) => {
     }
     else{
       logger.info('cheat call unsuccessful');
-      const challenger = game.participants.find(participant => participant.userId === req.session.userId);
+      const challenger = existingGame.participants.find(participant => participant.userId === req.session.userId);
       challenger.numberOfDice--;
       if (challenger.numberOfDice === 0){
         challenger.eliminated = true;
       }
       roundResults = {
-        callingPlayer: game.participants.find(participant => participant.userId === req.session.userId),
+        callingPlayer: existingGame.participants.find(participant => participant.userId === req.session.userId),
         calledPlayer: challengedPlayer,
         claim: lastClaim,
         claimSuccess: false,
@@ -318,13 +257,13 @@ app.post('/game/:gameId/claim', (req, res) => {
     logger.verbose(`gamePopulation is now:`);
     gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
     sendGameMessage(gameId, MessageType.RoundResults, roundResults);
-    const activePlayers = game.participants.filter(participant => !participant.eliminated);
+    const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
     if (activePlayers.length === 1){
       const gameOver: GameOver = {
         winner: activePlayers[0]
       }
       sendGameMessage(gameId, MessageType.GameOver, gameOver);
-      game.finished = true;
+      existingGame.finished = true;
     }
     else{
       startRound(gameId);
@@ -332,7 +271,7 @@ app.post('/game/:gameId/claim', (req, res) => {
   }
   // pass it on to the next player.
   else{
-    const activePlayers = game.participants.filter(participant => !participant.eliminated);
+    const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
     logger.debug(`activePlayers: ${JSON.stringify(activePlayers)}`);
     const currentPlayer = activePlayers.find(participant => participant.userId === req.session.userId);
     logger.debug(`currentPlayer: ${JSON.stringify(currentPlayer)}`);
@@ -367,13 +306,13 @@ function countNumberOfThatRoll(roll: number[], value: number){
 }
 
 function startRound(gameId: string){
-  const game = gamePopulation.get(gameId);
+  const existingGame = gamePopulation.get(gameId);
   // figure out starting player
   let startingPlayer: Participant;
-  const lastPlayEvent = game.gameMessageLog[game.gameMessageLog.length - 1];
+  const lastPlayEvent = existingGame.gameMessageLog[existingGame.gameMessageLog.length - 1];
   // randomize starting player if start of game
   if (lastPlayEvent.messageType === MessageType.GameStarted){
-    startingPlayer = game.participants[getRandomInt(game.participants.length-1)];
+    startingPlayer = existingGame.participants[getRandomInt(existingGame.participants.length-1)];
     logger.info(`new game, rolling for starting player, got ${startingPlayer.userId}`);
   }
   // whoever goofed up is the new starting player
@@ -388,7 +327,7 @@ function startRound(gameId: string){
     }
   }
   // send everyone's starting info
-  game.participants.forEach(participant => {
+  existingGame.participants.forEach(participant => {
     participant.roll = [];
     for (let i = 0; i < participant.numberOfDice; i++){
       participant.roll.push(getRandomInt(6) + 1);
@@ -410,13 +349,14 @@ function getRandomInt(max: number) {
 }
 
 function sendGameMessage(gameId: string, messageType: MessageType, message: any){
-  const game = gamePopulation.get(gameId);
+  const existingGame = gamePopulation.get(gameId);
   const gameMessage: GameMessage = {
     messageType,
     message
   }
-  game.gameMessageLog.push(gameMessage);
-  game.participants.forEach((participant: Participant) => {
+  logger.debug(`sending gameMessage: ${JSON.stringify(gameMessage)}`);
+  existingGame.gameMessageLog.push(gameMessage);
+  existingGame.participants.forEach((participant: Participant) => {
     const participantConnection = wsConnections.get(participant.userId);
     if (participantConnection){
       wsConnections.get(participant.userId).send(JSON.stringify(gameMessage));
@@ -428,12 +368,12 @@ function sendGameMessage(gameId: string, messageType: MessageType, message: any)
 }
 
 function sendGameMessageToOne(gameId: string, participantId: string, messageType: MessageType, message: any){
-  const game = gamePopulation.get(gameId);
+  const existingGame = gamePopulation.get(gameId);
   const gameMessage: GameMessage = {
     messageType,
     message
   }
-  game.gameMessageLog.push(gameMessage);
+  existingGame.gameMessageLog.push(gameMessage);
   wsConnections.get(participantId).send(JSON.stringify(gameMessage));
 }
 
