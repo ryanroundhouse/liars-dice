@@ -1,3 +1,2 @@
 export type Result<T> =
-    | { ok: boolean, value: T }
-    | { ok: boolean, message: string }
+    { ok: boolean, value?: T, message?: string}

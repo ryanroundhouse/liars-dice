@@ -129,7 +129,7 @@ app.post('/game/:gameId/join', (req, res) => {
     res.status(400).send(result);
     return;
   }
-  const participants: Participant[] = (result as any).value;
+  const participants: Participant[] = result.value;
   res.send({result: 'OK', message: participants});
   sendGameMessage(gameId, MessageType.PlayerJoined, participants[participants.length - 1]);
 });
@@ -153,7 +153,7 @@ app.post('/game/:gameId/start', (req, res) => {
   res.send({ result: 'OK', message: gameId });
   logger.verbose(`gamePopulation is now:`);
   sendGameMessage(gameId, MessageType.GameStarted, null);
-  startRound(gameId);
+  game.startRound(gameId, gamePopulation, wsConnections);
 });
 
 app.post('/game/:gameId/claim', (req, res) => {
@@ -259,7 +259,7 @@ app.post('/game/:gameId/claim', (req, res) => {
       existingGame.finished = true;
     }
     else{
-      startRound(gameId);
+      game.startRound(gameId, gamePopulation, wsConnections);
     }
   }
   // pass it on to the next player.
@@ -298,49 +298,6 @@ function countNumberOfThatRoll(roll: number[], value: number){
   return count;
 }
 
-function startRound(gameId: string){
-  const existingGame = gamePopulation.get(gameId);
-  // figure out starting player
-  let startingPlayer: Participant;
-  const lastPlayEvent = existingGame.gameMessageLog[existingGame.gameMessageLog.length - 1];
-  // randomize starting player if start of game
-  if (lastPlayEvent.messageType === MessageType.GameStarted){
-    startingPlayer = existingGame.participants[getRandomInt(existingGame.participants.length-1)];
-    logger.info(`new game, rolling for starting player, got ${startingPlayer.userId}`);
-  }
-  // whoever goofed up is the new starting player
-  else if (lastPlayEvent.messageType === MessageType.RoundResults){
-    logger.info(`checking lastPlayEvent: ${JSON.stringify(lastPlayEvent)}`);
-    const roundResults = (lastPlayEvent.message as RoundResults);
-    if (roundResults.claimSuccess){
-      startingPlayer = roundResults.calledPlayer;
-    }
-    else{
-      startingPlayer = roundResults.callingPlayer;
-    }
-  }
-  // send everyone's starting info
-  existingGame.participants.forEach(participant => {
-    participant.roll = [];
-    for (let i = 0; i < participant.numberOfDice; i++){
-      participant.roll.push(getRandomInt(6) + 1);
-    }
-    let starting = false;
-    if (participant.userId === startingPlayer.userId){
-      starting = true;
-    }
-    const roundSetup: RoundSetup = {
-      participant,
-      startingPlayer: starting
-    }
-    sendGameMessageToOne(gameId, participant.userId, MessageType.RoundStarted, roundSetup);
-  });
-}
-
-function getRandomInt(max: number) {
-  return Math.floor(Math.random() * Math.floor(max));
-}
-
 function sendGameMessage(gameId: string, messageType: MessageType, message: any){
   const existingGame = gamePopulation.get(gameId);
   const gameMessage: GameMessage = {
@@ -358,16 +315,6 @@ function sendGameMessage(gameId: string, messageType: MessageType, message: any)
       logger.error(`no connection found to send gameMessage to ${participant.userId}`);
     }
   });
-}
-
-function sendGameMessageToOne(gameId: string, participantId: string, messageType: MessageType, message: any){
-  const existingGame = gamePopulation.get(gameId);
-  const gameMessage: GameMessage = {
-    messageType,
-    message
-  }
-  existingGame.gameMessageLog.push(gameMessage);
-  wsConnections.get(participantId).send(JSON.stringify(gameMessage));
 }
 
 //
