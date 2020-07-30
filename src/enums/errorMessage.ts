@@ -17,4 +17,7 @@ export enum ErrorMessage{
     MustBeInGameToStartGame = "you must be in the game to start the game.",
     NoGameMessagesFound = "no gameMessages.  Start the game before calculating starting player.",
     UnableToDetermineStartingPlayer = "Unable to determine starting player.",
+    GameNotStarted = "game not started",
+    GameAlreadyFinished = "game already finished.",
+    MustHaveTwoOrMorePlayers = "must have 2 or more players.",
 }

@@ -113,6 +113,9 @@ export class Game{
         if (!inGame){
             return {ok: false, message: ErrorMessage.MustBeInGameToStartGame };
         }
+        if (existingGame.participants.length <= 1){
+            return {ok: false, message: ErrorMessage.MustHaveTwoOrMorePlayers };
+        }
 
         existingGame.started = true;
         return { ok: true, value: gameId };
@@ -125,16 +128,22 @@ export class Game{
         if (game.gameMessageLog.length === 0){
             return {ok:false, message: ErrorMessage.NoGameMessagesFound };
         }
+        if (!game.started){
+            return {ok:false, message: ErrorMessage.GameNotStarted };
+        }
+        if (game.finished){
+            return {ok:false, message: ErrorMessage.GameAlreadyFinished };
+        }
         let startingPlayer: Participant;
         const lastPlayEvent = game.gameMessageLog[game.gameMessageLog.length - 1];
         // randomize starting player if start of game
         if (lastPlayEvent.messageType === MessageType.GameStarted){
             startingPlayer = game.participants[Game.getRandomInt(game.participants.length-1)];
-            this.logger.info(`new game, rolling for starting player, got ${startingPlayer.userId}`);
+            this.logger?.info(`new game, rolling for starting player, got ${startingPlayer.userId}`);
         }
         // whoever goofed up is the new starting player
         else if (lastPlayEvent.messageType === MessageType.RoundResults){
-            this.logger.info(`checking lastPlayEvent: ${JSON.stringify(lastPlayEvent)}`);
+            this.logger?.info(`checking lastPlayEvent: ${JSON.stringify(lastPlayEvent)}`);
             const roundResults = (lastPlayEvent.message as RoundResults);
             if (roundResults.claimSuccess){
                 startingPlayer = roundResults.calledPlayer;
@@ -194,11 +203,15 @@ export class Game{
         if (!gameId){
             return { ok: false, message: ErrorMessage.NoGameIDProvided };
         }
+        if (!wsConnections){
+            return { ok: false, message: ErrorMessage.NoConnectionListProvided };
+        }
         const existingGame = gamePopulation.get(gameId);
         if (existingGame == null){
             return { ok: false, message: ErrorMessage.GameNotFound };
         }
 
+        // stopped testing here...
         const calcStartingPlayerResult: Result<Participant> = this.calculateStartingPlayer(existingGame);
         if (!calcStartingPlayerResult.ok){
             return {ok: false, message: calcStartingPlayerResult.message};

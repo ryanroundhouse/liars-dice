@@ -2,7 +2,7 @@ process.env.NODE_ENV = 'test'
 /* tslint:disable:no-unused-expression */
 
 import "mocha";
-import chai from "chai";
+import chai, { expect } from "chai";
 import { Game } from "./game";
 import { Result } from "./types/result";
 import { GameInterface } from "./interfaces/game-interface";
@@ -10,6 +10,11 @@ import { Participant } from "./interfaces/participant";
 import winston from "winston";
 import WebSocket from "ws";
 import { ErrorMessage } from "./enums/errorMessage";
+import { GameMessage } from "./interfaces/game-message";
+import { MessageType } from "./enums/messageType";
+import { RoundResults } from "./interfaces/round-results";
+import { Claim } from "./interfaces/claim";
+import sinon from "sinon";
 
 chai.should();
 
@@ -157,7 +162,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             gamePopulation.set("gameId", gameWithPlayer);
-            const result: Result<Participant[]> = game.joinGame(playerId, "gameId", "name", new Map<string, GameInterface>());
+            const result: Result<Participant[]> = game.joinGame(playerId, "gameId", "name", gamePopulation);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.CantJoinGameWhenInRunningGame);
         });
@@ -307,23 +312,8 @@ describe("game functionality", () => {
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.MustBeInGameToStartGame);
         });
-    });
-    describe("start Round tests", () => {
-        it("can't start round if you don't provide a gameId", () => {
-            const game: Game = new Game(logger);
-            const result: Result<string> = game.startRound(null, new Map<string, GameInterface>(), new Map<string, WebSocket>());
-            result.ok.should.be.false;
-            result.message.should.equal(ErrorMessage.NoGameIDProvided);
-        });
-        it("can't start round if you don't provide a gamePopulation", () => {
-            const game: Game = new Game(logger);
-            const result: Result<string> = game.startRound("gameId", null, new Map<string, WebSocket>());
-            result.ok.should.be.false;
-            result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
-        });
-        it("can't start round if you don't provide a webSocket connections list", () => {
-            const playerId: string = "not test";
-            const gameId: string = "gameId";
+        it("can't start game if one or fewer players.", () => {
+            const playerId: string = "test";
             const participant: Participant = {
                 userId: playerId,
                 name: "test player",
@@ -339,10 +329,364 @@ describe("game functionality", () => {
                 participants: [participant],
                 gameMessageLog: []
             }
+            gamePopulation.set("gameId", gameWithPlayer);
+            const result: Result<string> = game.startGame(playerId, "gameId", gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.MustHaveTwoOrMorePlayers);
+        });
+        it("can start game.", () => {
+            const firstPlayerId: string = "guid1";
+            const secondPlayerId: string = "guid2";
+            const gameId: string = "gameId";
+            const firstParticipant: Participant = {
+                userId: firstPlayerId,
+                name: "first player",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: false
+            }
+            const secondParticipant: Participant = {
+                userId: secondPlayerId,
+                name: "second player",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: false
+            }
+            const game: Game = new Game(logger);
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const gameWithPlayer: GameInterface = {
+                started: false,
+                finished: false,
+                participants: [firstParticipant, secondParticipant],
+                gameMessageLog: []
+            }
             gamePopulation.set(gameId, gameWithPlayer);
-            const result: Result<string> = game.startRound(gameId, gamePopulation, null);
+            const result: Result<string> = game.startGame(firstPlayerId, gameId, gamePopulation);
+            result.ok.should.be.true;
+            result.value.should.equal(gameId);
+        });
+    });
+    describe("start Round tests", () => {
+        it("can't start round if you don't provide a gameId", () => {
+            const game: Game = new Game(logger);
+            const result: Result<string> = game.startRound(null, new Map<string, GameInterface>(), new Map<string, WebSocket>());
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGameIDProvided);
+        });
+        it("can't start round if you don't provide a gamePopulation", () => {
+            const game: Game = new Game(logger);
+            const result: Result<string> = game.startRound("gameId", null, new Map<string, WebSocket>());
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
+        });
+        it("can't start round if you don't provide a webSocket connections list", () => {
+            const game: Game = new Game(logger);
+            const result: Result<string> = game.startRound("gameId", new Map<string, GameInterface>(), null);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoConnectionListProvided);
+        });
+        it("can't start round if game doesn't exist", () => {
+            const game: Game = new Game(logger);
+            const result: Result<string> = game.startRound("gameId", new Map<string, GameInterface>(), new Map<string, WebSocket>());
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.GameNotFound);
+        });
+    });
+    describe("calculateStartingPlayer tests", () => {
+        it("can't calculate starting player if no game provided.", () => {
+            const game: Game = new Game(logger);
+            const result: Result<Participant> = game.calculateStartingPlayer(null);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGameSpecified);
+        });
+        it("can't calculate starting player if no game messages found.", () => {
+            const game: Game = new Game(logger);
+            const gameInterface: GameInterface = {
+                participants: [],
+                started: false,
+                finished: false,
+                gameMessageLog: []
+            };
+            const result: Result<Participant> = game.calculateStartingPlayer(gameInterface);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGameMessagesFound);
+        });
+        it("can't calculate starting player if game not started.", () => {
+            const game: Game = new Game(logger);
+            const message: GameMessage = {
+                messageType: MessageType.GameStarted,
+                message: "game started"
+            }
+            const gameInterface: GameInterface = {
+                participants: [],
+                started: false,
+                finished: false,
+                gameMessageLog: [message]
+            };
+            const result: Result<Participant> = game.calculateStartingPlayer(gameInterface);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.GameNotStarted);
+        });
+        it("can't calculate starting player if game already finished.", () => {
+            const game: Game = new Game(logger);
+            const message: GameMessage = {
+                messageType: MessageType.GameStarted,
+                message: "game started"
+            }
+            const gameInterface: GameInterface = {
+                participants: [],
+                started: true,
+                finished: true,
+                gameMessageLog: [message]
+            };
+            const result: Result<Participant> = game.calculateStartingPlayer(gameInterface);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.GameAlreadyFinished);
+        });
+        it("can calculate starting player if at start of game.", () => {
+            const game: Game = new Game(logger);
+            const firstPlayerId: string = "guid1";
+            const secondPlayerId: string = "guid2";
+            const firstParticipant: Participant = {
+                userId: firstPlayerId,
+                name: "first player",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: false
+            }
+            const secondParticipant: Participant = {
+                userId: secondPlayerId,
+                name: "second player",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: false
+            }
+            const message: GameMessage = {
+                messageType: MessageType.GameStarted,
+                message: "game started"
+            }
+            const gameInterface: GameInterface = {
+                participants: [firstParticipant, secondParticipant],
+                started: true,
+                finished: false,
+                gameMessageLog: [message]
+            };
+            const result: Result<Participant> = game.calculateStartingPlayer(gameInterface);
+            result.ok.should.be.true;
+            expect([firstParticipant, secondParticipant]).to.include(result.value);
+        });
+        it("can calculate starting player if someone messes up.", () => {
+            const game: Game = new Game(logger);
+            const firstPlayerId: string = "guid1";
+            const secondPlayerId: string = "guid2";
+            const firstParticipant: Participant = {
+                userId: firstPlayerId,
+                name: "first player",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: false
+            }
+            const secondParticipant: Participant = {
+                userId: secondPlayerId,
+                name: "second player",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: false
+            }
+            const claim: Claim = {
+                quantity: 0,
+                value: 0,
+                cheat: true
+            }
+            const roundResults: RoundResults = {
+                callingPlayer: firstParticipant,
+                calledPlayer: secondParticipant,
+                claim: claim,
+                claimSuccess: true,
+                playerEliminated: false
+            }
+            const message: GameMessage = {
+                messageType: MessageType.RoundResults,
+                message: roundResults
+            }
+            const gameInterface: GameInterface = {
+                participants: [firstParticipant, secondParticipant],
+                started: true,
+                finished: false,
+                gameMessageLog: [message]
+            };
+            const result: Result<Participant> = game.calculateStartingPlayer(gameInterface);
+            result.ok.should.be.true;
+            result.value.should.equal(secondParticipant);
+        });
+    });
+    describe ("sendGameMessageToOne tests", () => {
+        it("sendGameMessageToOne fails if no gameId", () => {
+            const gameId: string = "gameId";
+            const participantId: string = "participantId";
+            const messageType: MessageType = MessageType.GameStarted;
+            const message: string = "message";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
+            const game = new Game(null);
+            
+            const result: Result<string> = game.sendGameMessageToOne(null, participantId, messageType, message, gamePopulation, wsConnections);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGameIDProvided);
+        });
+        it("sendGameMessageToOne fails if no participantId", () => {
+            const gameId: string = "gameId";
+            const participantId: string = "participantId";
+            const messageType: MessageType = MessageType.GameStarted;
+            const message: string = "message";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
+            const game = new Game(null);
+            
+            const result: Result<string> = game.sendGameMessageToOne(gameId, null, messageType, message, gamePopulation, wsConnections);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoParticipantProvided);
+        });
+        it("sendGameMessageToOne fails if no messageType", () => {
+            const gameId: string = "gameId";
+            const participantId: string = "participantId";
+            const messageType: MessageType = MessageType.GameStarted;
+            const message: string = "message";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
+            const game = new Game(null);
+            
+            const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, null, message, gamePopulation, wsConnections);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoMessageTypeProvided);
+        });
+        it("sendGameMessageToOne fails if no message", () => {
+            const gameId: string = "gameId";
+            const participantId: string = "participantId";
+            const messageType: MessageType = MessageType.GameStarted;
+            const message: string = "message";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
+            const game = new Game(null);
+            
+            const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, messageType, null, gamePopulation, wsConnections);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoMessageProvided);
+        });
+        it("sendGameMessageToOne fails if no gamePopulation", () => {
+            const gameId: string = "gameId";
+            const participantId: string = "participantId";
+            const messageType: MessageType = MessageType.GameStarted;
+            const message: string = "message";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
+            const game = new Game(null);
+            
+            const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, messageType, message, null, wsConnections);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
+        });
+        it("sendGameMessageToOne fails if no connection list", () => {
+            const gameId: string = "gameId";
+            const participantId: string = "participantId";
+            const messageType: MessageType = MessageType.GameStarted;
+            const message: string = "message";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
+            const game = new Game(null);
+            
+            const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation, null);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoConnectionListProvided);
+        });
+        it("sendGameMessageToOne fails if gameId not in gamePopulation", () => {
+            const gameId: string = "gameId";
+            const participantId: string = "participantId";
+            const messageType: MessageType = MessageType.GameStarted;
+            const message: string = "message";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const participant: Participant = {
+                userId: "not participantId",
+                name: "name",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: false
+            }
+            const gameInterface: GameInterface = {
+                started: false,
+                finished: false,
+                gameMessageLog: [],
+                participants: [participant]
+            }
+            gamePopulation.set("some other gameId", gameInterface);
+            const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
+            const game = new Game(null);
+            
+            const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation, wsConnections);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.GameNotFound);
+        });
+        it("sendGameMessageToOne fails if participant not in connection list", () => {
+            const gameId: string = "gameId";
+            const participantId: string = "participantId";
+            const messageType: MessageType = MessageType.GameStarted;
+            const message: string = "message";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const participant: Participant = {
+                userId: "not participantId",
+                name: "name",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: false
+            }
+            const gameInterface: GameInterface = {
+                started: false,
+                finished: false,
+                gameMessageLog: [],
+                participants: [participant]
+            }
+            gamePopulation.set(gameId, gameInterface);
+            const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
+            const game = new Game(null);
+            
+            const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation, wsConnections);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.ParticipantNotInConnectionList);
+        });
+        it("sendGameMessageToOne adds gameMessage to gameMessageLog", () => {
+            const gameId: string = "gameId";
+            const participantId: string = "participantId";
+            const messageType: MessageType = MessageType.GameStarted;
+            const message: string = "message";
+            const gameMessage: GameMessage = {
+                messageType,
+                message
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const participant: Participant = {
+                userId: participantId,
+                name: "name",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: false
+            }
+            const gameInterface: GameInterface = {
+                started: false,
+                finished: false,
+                gameMessageLog: [],
+                participants: [participant]
+            }
+            gamePopulation.set(gameId, gameInterface);
+            const webSocket = new WebSocket("ws://localhost");
+            const webSocketStub = sinon.stub(webSocket);
+            const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
+            wsConnections.set(participantId, webSocket);
+            const game = new Game(null);
+            
+            const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation, wsConnections);
+            result.ok.should.be.true;
+            expect(webSocketStub.send.calledOnce).to.be.true;
+            result.value.should.equal("message sent.");
         });
     });
 });
