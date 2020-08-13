@@ -194,6 +194,7 @@ export class Game{
             }
             this.sendGameMessageToOne(gameId, participant.userId, MessageType.RoundStarted, roundSetup, gamePopulation, wsConnections);
         });
+        return { ok: true, message: "messages sent" };
     }
     
     startRound(gameId: string, gamePopulation: Map<string, GameInterface>, wsConnections: Map<string, WebSocket>): Result<string>{
