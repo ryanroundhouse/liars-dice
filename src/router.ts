@@ -29,8 +29,6 @@ const logger = winston.createLogger({
 
 const app = express();
 const port = 8080; // default port to listen
-const wsConnections = new Map<string, WebSocket>();
-const gamePopulation = new Map<string, GameInterface>();
 const secret = 'alibubalay';
 const game = new Game(logger);
 
@@ -87,7 +85,7 @@ app.delete('/logout', (request, response) => {
     response.status(400).send({result: '400', message: 'you\'re not logged in.'});
     return;
   }
-  const ws = wsConnections.get(request.session.userId);
+  const ws = game.wsConnections.get(request.session.userId);
 
   logger.log('info', `Destroying session from ${request.session.userId} `);
   request.session.destroy(() => {
@@ -106,7 +104,7 @@ app.post('/game/create', (req, res) => {
     logger.log('info', `user tried to create a game before logging in.`);
     return;
   }
-  const result = game.createGame(userId, gamePopulation);
+  const result = game.createGame(userId, game.gamePopulation);
   if (!result.ok){
     res.status(400).send(result);
     return;
@@ -124,7 +122,7 @@ app.post('/game/:gameId/join', (req, res) => {
   const gameId = req.params.gameId;
   const name = req.body.name;
 
-  const result = game.joinGame(userId, gameId, name, gamePopulation);
+  const result = game.joinGame(userId, gameId, name, game.gamePopulation);
   if (!result.ok){
     res.status(400).send(result);
     return;
@@ -144,7 +142,7 @@ app.post('/game/:gameId/start', (req, res) => {
   }
   logger.log('info', `got request to start ${gameId} from ${userId}`);
 
-  const result = game.startGame(userId, gameId, gamePopulation);
+  const result = game.startGame(userId, gameId, game.gamePopulation);
   if (!result.ok){
     res.status(400).send(result);
     return;
@@ -153,7 +151,7 @@ app.post('/game/:gameId/start', (req, res) => {
   res.send({ result: 'OK', message: gameId });
   logger.verbose(`gamePopulation is now:`);
   sendGameMessage(gameId, MessageType.GameStarted, null);
-  game.startRound(gameId, gamePopulation, wsConnections);
+  game.startRound(gameId, game.gamePopulation, game.wsConnections);
 });
 
 app.post('/game/:gameId/claim', (req, res) => {
@@ -165,7 +163,7 @@ app.post('/game/:gameId/claim', (req, res) => {
   }
   const claim: GameMessage = req.body;
   logger.log('info', `got request to make a claim ${JSON.stringify(claim)} in ${gameId} from ${req.session.userId}`);
-  const existingGame = gamePopulation.get(gameId);
+  const existingGame = game.gamePopulation.get(gameId);
   // does the game exist?
   if (existingGame == null){
     res.send({ result: '400', message: 'game does not exist.' });
@@ -248,7 +246,7 @@ app.post('/game/:gameId/claim', (req, res) => {
     }
     res.send({ result: 'OK', message: 'true' });
     logger.verbose(`gamePopulation is now:`);
-    gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
+    game.gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
     sendGameMessage(gameId, MessageType.RoundResults, roundResults);
     const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
     if (activePlayers.length === 1){
@@ -259,7 +257,7 @@ app.post('/game/:gameId/claim', (req, res) => {
       existingGame.finished = true;
     }
     else{
-      game.startRound(gameId, gamePopulation, wsConnections);
+      game.startRound(gameId, game.gamePopulation, game.wsConnections);
     }
   }
   // pass it on to the next player.
@@ -279,7 +277,7 @@ app.post('/game/:gameId/claim', (req, res) => {
     claim.message.playerId = req.session.userId;
     res.send({ result: 'OK', message: 'true' });
     logger.verbose(`gamePopulation is now:`);
-    gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
+    game.gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
     sendGameMessage(gameId, MessageType.Claim, claim.message);
   }
 });
@@ -299,7 +297,7 @@ function countNumberOfThatRoll(roll: number[], value: number){
 }
 
 function sendGameMessage(gameId: string, messageType: MessageType, message: any){
-  const existingGame = gamePopulation.get(gameId);
+  const existingGame = game.gamePopulation.get(gameId);
   const gameMessage: GameMessage = {
     messageType,
     message
@@ -307,9 +305,9 @@ function sendGameMessage(gameId: string, messageType: MessageType, message: any)
   logger.debug(`sending gameMessage: ${JSON.stringify(gameMessage)}`);
   existingGame.gameMessageLog.push(gameMessage);
   existingGame.participants.forEach((participant: Participant) => {
-    const participantConnection = wsConnections.get(participant.userId);
+    const participantConnection = game.wsConnections.get(participant.userId);
     if (participantConnection){
-      wsConnections.get(participant.userId).send(JSON.stringify(gameMessage));
+      game.wsConnections.get(participant.userId).send(JSON.stringify(gameMessage));
     }
     else{
       logger.error(`no connection found to send gameMessage to ${participant.userId}`);
@@ -344,7 +342,7 @@ wss.on('connection', (ws, request) => {
   // hacky workaround to use express-session with ws.
   const userId = (request as any).session.userId;
 
-  wsConnections.set(userId.toString(), ws);
+  game.wsConnections.set(userId.toString(), ws);
 
   ws.on('message', (message) => {
     logger.log('info', `Received message ${message} from user ${userId}`);
@@ -366,7 +364,7 @@ wss.on('connection', (ws, request) => {
   });
 
   ws.on('close', () => {
-    wsConnections.delete(userId.toString());
+    game.wsConnections.delete(userId.toString());
   });
 });
 

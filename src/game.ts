@@ -12,6 +12,8 @@ import { ErrorMessage } from "./enums/errorMessage";
 
 export class Game{
     logger: winston.Logger;
+    wsConnections = new Map<string, WebSocket>();
+    gamePopulation = new Map<string, GameInterface>();
 
     constructor(logger: winston.Logger){
         // this.logger = logger || winston.createLogger();
@@ -212,7 +214,6 @@ export class Game{
             return { ok: false, message: ErrorMessage.GameNotFound };
         }
 
-        // stopped testing here...
         const calcStartingPlayerResult: Result<Participant> = this.calculateStartingPlayer(existingGame);
         if (!calcStartingPlayerResult.ok){
             return {ok: false, message: calcStartingPlayerResult.message};

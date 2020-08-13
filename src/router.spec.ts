@@ -214,6 +214,20 @@ describe("loading express", () => {
                 });
         });
     });
+    
+    describe("start game tests",() => {
+        it("start game fails if not logged in", (done) => {
+            chai.request(server)
+                .post('/game/1/start')
+                .end((err, res) => {
+                    if (err){
+                        return done(err);
+                    }
+                    res.should.have.status(400);
+                    done();
+                });
+        });
+    });
 });
 
 function cookie(res: any) {
