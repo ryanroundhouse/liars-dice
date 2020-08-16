@@ -9,14 +9,15 @@ import { RoundResults } from "./interfaces/round-results";
 import { GameMessage } from "./interfaces/game-message";
 import WebSocket from "ws";
 import { ErrorMessage } from "./enums/errorMessage";
+import { Claim } from "./interfaces/claim";
+import { GameOver } from "./interfaces/game-over";
+import { Messenger } from "./messenger";
 
 export class Game{
     static wsConnections = new Map<string, WebSocket>();
     static gamePopulation = new Map<string, GameInterface>();
 
-    constructor(private logger: winston.Logger){
-        // this.logger = logger || winston.createLogger();
-    }
+    constructor(private logger: winston.Logger, private messenger: Messenger){}
 
     createGame(userId:string, gamePopulation: Map<string, GameInterface>): Result<string>{
         if (!userId){
@@ -86,6 +87,7 @@ export class Game{
             eliminated: false
         };
         existingGame.participants.push(participant);
+        this.messenger.sendGameMessageToAll(gameId, MessageType.PlayerJoined, existingGame.participants[existingGame.participants.length - 1]);
         return {ok: true, value: existingGame.participants};
     }
 
@@ -119,6 +121,7 @@ export class Game{
         }
 
         existingGame.started = true;
+        this.messenger.sendGameMessageToAll(gameId, MessageType.GameStarted, null);
         return { ok: true, value: gameId };
     }
 
@@ -193,7 +196,7 @@ export class Game{
                 participant,
                 startingPlayer: starting
             }
-            this.sendGameMessageToOne(gameId, participant.userId, MessageType.RoundStarted, roundSetup, gamePopulation, wsConnections);
+            this.messenger.sendGameMessageToOne(gameId, participant.userId, MessageType.RoundStarted, roundSetup, gamePopulation, wsConnections);
         });
         return { ok: true, message: "messages sent" };
     }
@@ -225,43 +228,131 @@ export class Game{
         return { ok: true, value: "round started." };
     }
 
-    sendGameMessageToOne(gameId: string, participantId: string, messageType: MessageType, message: any, gamePopulation: Map<string, GameInterface>, wsConnections: Map<string, WebSocket>): Result<string>{
-        if (!gameId){
-            return {ok: false, message: ErrorMessage.NoGameIDProvided};
-        }
-        if (!participantId){
-            return {ok: false, message: ErrorMessage.NoParticipantProvided};
-        }
-        if (!messageType){
-            return {ok: false, message: ErrorMessage.NoMessageTypeProvided};
-        }
-        if (!message){
-            return {ok: false, message: ErrorMessage.NoMessageProvided};
-        }
-        if (!gamePopulation){
-            return {ok: false, message: ErrorMessage.NoGamePopulationProvided};
-        }
-        if (!wsConnections){
-            return {ok: false, message: ErrorMessage.NoConnectionListProvided};
-        }
+    processClaim(gameId: string, playerId: string, currentClaim: GameMessage, gamePopulation: Map<string, GameInterface>): Result<string> {
+        this.logger.log('info', `got request to make a claim ${JSON.stringify(currentClaim)} in ${gameId} from ${playerId}`);
         const existingGame = gamePopulation.get(gameId);
-        if (!existingGame){
-            return {ok: false, message: ErrorMessage.GameNotFound};
+        // does the game exist?
+        if (existingGame == null){
+            this.logger.log('info', `${playerId} tried to start game ${gameId} that didn't exist.`);
+            return {ok: false, message: 'game does not exist.'};
         }
-        const gameMessage: GameMessage = {
-          messageType,
-          message
+        // is the game not started
+        if (!existingGame.started){
+            this.logger.log('info', `${playerId} tried to make a claim in ${gameId} but it hasn't started yet.`);
+            return {ok: false, message: 'game has\'nt started yet.'};
         }
-        existingGame.gameMessageLog.push(gameMessage);
-        const wsConnection = wsConnections.get(participantId);
-        if (!wsConnection){
-            return {ok: false, message: ErrorMessage.ParticipantNotInConnectionList};
+        const lastMessage = existingGame.gameMessageLog[existingGame.gameMessageLog.length - 1];
+        this.logger.debug(`lastMessage was ${JSON.stringify(lastMessage)}`);
+        // can't claim if it's not your turn
+        if (lastMessage.messageType === MessageType.Claim){
+            this.logger.debug(`comparing ${JSON.stringify(lastMessage)} to ${JSON.stringify(currentClaim)} by ${playerId}`);
+            if (lastMessage.message.nextPlayerId !== playerId){
+                this.logger.log('info', `${playerId} tried to claim in ${gameId} when it's not their turn.`);
+                return {ok: false, message: 'it\'s not your turn.'};
+            }
+            if (!(currentClaim.message as Claim).cheat && (lastMessage.message as Claim).quantity >= currentClaim.message.quantity){
+                this.logger.log('info', `${playerId} tried to claim smaller than last claim in ${gameId}.`);
+                return {ok: false, message: 'you need to make a claim of larger quantity than the last claim or call cheat.'};
+            }
         }
-        wsConnection.send(JSON.stringify(gameMessage));
-        return {ok: true, value: "message sent."};
+        if (lastMessage.messageType === MessageType.RoundStarted){
+            // find the starting player's roundstarted.  It's not always the last one.
+            const reverseGameMessageLog = existingGame.gameMessageLog.slice().reverse();
+            const startingPlayerMessage = reverseGameMessageLog.find(gameMessage => gameMessage.messageType === MessageType.RoundStarted && (gameMessage.message as RoundSetup).startingPlayer);
+            this.logger.debug(`found startingPlayer from: ${JSON.stringify(startingPlayerMessage)}`);
+            if ((startingPlayerMessage.message as RoundSetup).participant.userId !== playerId){
+                this.logger.log('info', `${playerId} tried to claim in ${gameId} when it's not their turn!`);
+                return {ok: false, message: 'it\'s not your turn.'};
+            }
+        }
+        // cheat is called.  Resolve.
+        if (currentClaim.message.cheat){
+            // can't call cheat with no claims
+            if (lastMessage.messageType !== MessageType.Claim){
+                this.logger.log('info', `${playerId} tried to call cheat in ${gameId} when there hasn't been a claim.`);
+                return {ok: false, message: 'can\'t call cheat if no one has made a claim.'};
+            }
+            const lastClaim = lastMessage.message as Claim;
+            const challengedPlayer = existingGame.participants.find(participant => participant.userId === lastClaim.playerId);
+            const numberOfThatRoll = Game.countNumberOfThatRoll(challengedPlayer.roll, lastClaim.value);
+            let roundResults: RoundResults;
+            if (lastClaim.quantity > numberOfThatRoll){
+                this.logger.info('cheat call successful');
+                challengedPlayer.numberOfDice--;
+                if (challengedPlayer.numberOfDice === 0){
+                    challengedPlayer.eliminated = true;
+                }
+                roundResults = {
+                    callingPlayer: existingGame.participants.find(participant => participant.userId === playerId),
+                    calledPlayer: challengedPlayer,
+                    claim: lastClaim,
+                    claimSuccess: true,
+                    playerEliminated: challengedPlayer.numberOfDice === 0
+                }
+            }
+            else{
+                this.logger.info('cheat call unsuccessful');
+                const challenger = existingGame.participants.find(participant => participant.userId === playerId);
+                challenger.numberOfDice--;
+                if (challenger.numberOfDice === 0){
+                    challenger.eliminated = true;
+                }
+                roundResults = {
+                    callingPlayer: existingGame.participants.find(participant => participant.userId === playerId),
+                    calledPlayer: challengedPlayer,
+                    claim: lastClaim,
+                    claimSuccess: false,
+                    playerEliminated: challenger.numberOfDice === 0
+                }
+            }
+            this.logger.verbose(`gamePopulation is now:`);
+            Game.gamePopulation.forEach((val, key) => this.logger.verbose(`${key}: ${JSON.stringify(val)}`));
+            this.messenger.sendGameMessageToAll(gameId, MessageType.RoundResults, roundResults);
+            const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
+            if (activePlayers.length === 1){
+                const gameOver: GameOver = {
+                    winner: activePlayers[0]
+                }
+                this.messenger.sendGameMessageToAll(gameId, MessageType.GameOver, gameOver);
+                existingGame.finished = true;
+            }
+            else{
+                this.startRound(gameId, Game.gamePopulation, Game.wsConnections);
+            }
+        }
+        // pass it on to the next player.
+        else{
+            const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
+            this.logger.debug(`activePlayers: ${JSON.stringify(activePlayers)}`);
+            const currentPlayer = activePlayers.find(participant => participant.userId === playerId);
+            this.logger.debug(`currentPlayer: ${JSON.stringify(currentPlayer)}`);
+            let nextPlayer: Participant;
+            if (activePlayers.indexOf(currentPlayer) === activePlayers.length - 1){
+                nextPlayer = activePlayers[0];
+            }
+            else{
+                nextPlayer = activePlayers[activePlayers.indexOf(currentPlayer) + 1];
+            }
+            currentClaim.message.nextPlayerId = nextPlayer.userId;
+            currentClaim.message.playerId = playerId;
+            this.logger.verbose(`gamePopulation is now:`);
+            Game.gamePopulation.forEach((val, key) => this.logger.verbose(`${key}: ${JSON.stringify(val)}`));
+            this.messenger.sendGameMessageToAll(gameId, MessageType.Claim, currentClaim.message);
+        }
+        return {ok: true, message: "claim processed."};
     }
 
     static getRandomInt(max: number) {
       return Math.floor(Math.random() * Math.floor(max));
+    }
+
+    static countNumberOfThatRoll(roll: number[], value: number){
+        let count = 0;
+        for(const die of roll){
+            if(+die === +value){
+                count++;
+            }
+        }
+        return count;
     }
 }
