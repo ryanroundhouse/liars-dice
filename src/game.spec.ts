@@ -112,7 +112,7 @@ describe("game functionality", () => {
             result.ok.should.be.true;
         });
     });
-    
+
     describe("join game functionality", () => {
         it("can't join game if you don't provide a userID", () => {
             const game: Game = new Game(logger);
@@ -501,7 +501,7 @@ describe("game functionality", () => {
             const roundResults: RoundResults = {
                 callingPlayer: firstParticipant,
                 calledPlayer: secondParticipant,
-                claim: claim,
+                claim,
                 claimSuccess: true,
                 playerEliminated: false
             }
@@ -529,7 +529,7 @@ describe("game functionality", () => {
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.sendGameMessageToOne(null, participantId, messageType, message, gamePopulation, wsConnections);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGameIDProvided);
@@ -542,7 +542,7 @@ describe("game functionality", () => {
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.sendGameMessageToOne(gameId, null, messageType, message, gamePopulation, wsConnections);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoParticipantProvided);
@@ -555,7 +555,7 @@ describe("game functionality", () => {
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, null, message, gamePopulation, wsConnections);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoMessageTypeProvided);
@@ -568,7 +568,7 @@ describe("game functionality", () => {
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, messageType, null, gamePopulation, wsConnections);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoMessageProvided);
@@ -581,7 +581,7 @@ describe("game functionality", () => {
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, messageType, message, null, wsConnections);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
@@ -594,7 +594,7 @@ describe("game functionality", () => {
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation, null);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoConnectionListProvided);
@@ -621,7 +621,7 @@ describe("game functionality", () => {
             gamePopulation.set("some other gameId", gameInterface);
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation, wsConnections);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.GameNotFound);
@@ -648,7 +648,7 @@ describe("game functionality", () => {
             gamePopulation.set(gameId, gameInterface);
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation, wsConnections);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.ParticipantNotInConnectionList);
@@ -682,7 +682,7 @@ describe("game functionality", () => {
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             wsConnections.set(participantId, webSocket);
             const game = new Game(null);
-            
+
             const result: Result<string> = game.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation, wsConnections);
             result.ok.should.be.true;
             expect(webSocketStub.send.calledOnce).to.be.true;
@@ -704,7 +704,7 @@ describe("game functionality", () => {
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(null, startingPlayer, messageType, gamePopulation, wsConnections);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGameIDProvided);
@@ -722,7 +722,7 @@ describe("game functionality", () => {
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(gameId, null, messageType, gamePopulation, wsConnections);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoStartingPlayerProvided);
@@ -740,7 +740,7 @@ describe("game functionality", () => {
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(gameId, startingPlayer, null, gamePopulation, wsConnections);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoMessageTypeProvided);
@@ -758,7 +758,7 @@ describe("game functionality", () => {
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(gameId, startingPlayer, messageType, null, wsConnections);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
@@ -776,7 +776,7 @@ describe("game functionality", () => {
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const game = new Game(null);
-            
+
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(gameId, startingPlayer, messageType, gamePopulation, null);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoConnectionListProvided);
@@ -819,7 +819,7 @@ describe("game functionality", () => {
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(gameId, startingPlayer, messageType, gamePopulation, wsConnections);
             result.ok.should.be.true;
             expect(startingPlayerWebSocketStub.send.calledOnce).to.be.true;
-            
+
             const startingPlayerMessage = JSON.parse(startingPlayerWebSocketStub.send.firstCall.args[0]);
             const nextPlayerMessage = JSON.parse(nextPlayerWebSocketStub.send.firstCall.args[0]);
             expect(startingPlayerWebSocketStub.send.calledOnce).to.be.true;

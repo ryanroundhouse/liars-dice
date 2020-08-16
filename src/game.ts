@@ -11,11 +11,10 @@ import WebSocket from "ws";
 import { ErrorMessage } from "./enums/errorMessage";
 
 export class Game{
-    logger: winston.Logger;
-    wsConnections = new Map<string, WebSocket>();
-    gamePopulation = new Map<string, GameInterface>();
+    static wsConnections = new Map<string, WebSocket>();
+    static gamePopulation = new Map<string, GameInterface>();
 
-    constructor(logger: winston.Logger){
+    constructor(private logger: winston.Logger){
         // this.logger = logger || winston.createLogger();
     }
 
@@ -70,7 +69,7 @@ export class Game{
         }
         let alreadyInGame = false;
         gamePopulation.forEach((selectedGame: GameInterface) => {
-            if (typeof selectedGame.participants.find(selectedParticipant => selectedParticipant.userId === userId && selectedParticipant.eliminated == false) !== "undefined"){
+            if (typeof selectedGame.participants.find(selectedParticipant => selectedParticipant.userId === userId && selectedParticipant.eliminated === false) !== "undefined"){
                 if (!selectedGame.finished){
                     alreadyInGame = true;
                 }
@@ -198,7 +197,7 @@ export class Game{
         });
         return { ok: true, message: "messages sent" };
     }
-    
+
     startRound(gameId: string, gamePopulation: Map<string, GameInterface>, wsConnections: Map<string, WebSocket>): Result<string>{
         if (!gamePopulation){
             return { ok: false, message: ErrorMessage.NoGamePopulationProvided };
