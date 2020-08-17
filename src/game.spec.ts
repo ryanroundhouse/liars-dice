@@ -686,4 +686,229 @@ describe("game functionality", () => {
             result.message.should.equal("messages sent");
         });
     });
+    describe ("processClaim tests", () => {
+        it("processClaim fails if no gameId", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: ""
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.processClaim(null, playerId, currentClaim, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGameIDProvided);
+        });
+        it("processClaim fails if game not found", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: ""
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.GameNotFound);
+        });
+        it("processClaim fails if game not started", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: ""
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const player: Participant = {
+                userId: "userId",
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const gameInterface: GameInterface = {
+                started: false,
+                finished: false,
+                gameMessageLog: [],
+                participants: [player]
+            }
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.GameNotStarted);
+        });
+        it("processClaim fails if no playerId", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: ""
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const player: Participant = {
+                userId: "userId",
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: false,
+                gameMessageLog: [],
+                participants: [player]
+            }
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.processClaim(gameId, null, currentClaim, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoUserIDProvided);
+        });
+        it("processClaim fails if no currentClaim", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: ""
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.processClaim(gameId, playerId, null, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoClaimProvided);
+        });
+        it("processClaim fails if no gamePopulation", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: ""
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, null);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
+        });
+        it("processClaim fails if it's not your turn and responding to claim", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: ""
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const player: Participant = {
+                userId: playerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: false,
+                gameMessageLog: [],
+                participants: [player]
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: {nextPlayerId: "notPlayerId"}
+            }
+            gameInterface.gameMessageLog.push(lastMessage);
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NotYourTurn);
+        });
+        it("processClaim fails if less quantity than previous claim", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: {
+                    quantity: 2
+                }
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const player: Participant = {
+                userId: playerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: false,
+                gameMessageLog: [],
+                participants: [player]
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: {
+                    nextPlayerId: playerId,
+                    quantity: 3
+                }
+            }
+            gameInterface.gameMessageLog.push(lastMessage);
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.ClaimTooLow);
+        });
+        it("processClaim fails if it's not your turn and responding to starting event", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: {
+                    quantity: 2
+                }
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const player: Participant = {
+                userId: playerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: false,
+                gameMessageLog: [],
+                participants: [player]
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.RoundStarted,
+                message: {
+                    participant:{
+                        userId: "notPlayerId"
+                    },
+                    startingPlayer: "notPlayerId"
+                }
+            }
+            gameInterface.gameMessageLog.push(lastMessage);
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NotYourTurn);
+        });
+    });
 });
