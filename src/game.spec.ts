@@ -629,8 +629,6 @@ describe("game functionality", () => {
             result.message.should.equal(ErrorMessage.ParticipantNotInConnectionList);
         });
         it("generateDiceAndNotifyGameMessage succeeds", () => {
-            // const messenger = new Messenger();
-            // const messengerStub = sinon.stub(messenger);
             const startingPlayer: Participant = {
                 userId: "userId",
                 name: "name",
@@ -669,12 +667,11 @@ describe("game functionality", () => {
             const game = new Game(null, tempMessenger);
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(gameId, startingPlayer, messageType, gamePopulation);
             result.ok.should.be.true;
-            expect(startingPlayerWebSocketStub.send.calledOnce).to.be.true;
 
-            const startingPlayerMessage = JSON.parse(startingPlayerWebSocketStub.send.firstCall.args[0]);
-            const nextPlayerMessage = JSON.parse(nextPlayerWebSocketStub.send.firstCall.args[0]);
             expect(startingPlayerWebSocketStub.send.calledOnce).to.be.true;
             expect(nextPlayerWebSocketStub.send.calledOnce).to.be.true;
+            const startingPlayerMessage = JSON.parse(startingPlayerWebSocketStub.send.firstCall.args[0]);
+            const nextPlayerMessage = JSON.parse(nextPlayerWebSocketStub.send.firstCall.args[0]);
             startingPlayerMessage.message.startingPlayer.should.equal(true);
             nextPlayerMessage.message.startingPlayer.should.equal(false);
             startingPlayerMessage.message.participant.roll.length.should.equal(startingPlayer.numberOfDice);

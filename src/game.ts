@@ -7,7 +7,6 @@ import { MessageType } from "./enums/messageType";
 import { RoundSetup } from "./interfaces/round-setup";
 import { RoundResults } from "./interfaces/round-results";
 import { GameMessage } from "./interfaces/game-message";
-import WebSocket from "ws";
 import { ErrorMessage } from "./enums/errorMessage";
 import { Claim } from "./interfaces/claim";
 import { GameOver } from "./interfaces/game-over";
@@ -87,7 +86,7 @@ export class Game{
             eliminated: false
         };
         existingGame.participants.push(participant);
-        this.messenger.sendGameMessageToAll(gameId, MessageType.PlayerJoined, existingGame.participants[existingGame.participants.length - 1]);
+        this.messenger.sendGameMessageToAll(gameId, MessageType.PlayerJoined, existingGame.participants[existingGame.participants.length - 1], gamePopulation);
         return {ok: true, value: existingGame.participants};
     }
 
@@ -121,7 +120,7 @@ export class Game{
         }
 
         existingGame.started = true;
-        this.messenger.sendGameMessageToAll(gameId, MessageType.GameStarted, null);
+        this.messenger.sendGameMessageToAll(gameId, MessageType.GameStarted, null, gamePopulation);
         return { ok: true, value: gameId };
     }
 
@@ -307,13 +306,13 @@ export class Game{
             }
             this.logger.verbose(`gamePopulation is now:`);
             Game.gamePopulation.forEach((val, key) => this.logger.verbose(`${key}: ${JSON.stringify(val)}`));
-            this.messenger.sendGameMessageToAll(gameId, MessageType.RoundResults, roundResults);
+            this.messenger.sendGameMessageToAll(gameId, MessageType.RoundResults, roundResults, gamePopulation);
             const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
             if (activePlayers.length === 1){
                 const gameOver: GameOver = {
                     winner: activePlayers[0]
                 }
-                this.messenger.sendGameMessageToAll(gameId, MessageType.GameOver, gameOver);
+                this.messenger.sendGameMessageToAll(gameId, MessageType.GameOver, gameOver, gamePopulation);
                 existingGame.finished = true;
             }
             else{
@@ -337,7 +336,7 @@ export class Game{
             currentClaim.message.playerId = playerId;
             this.logger.verbose(`gamePopulation is now:`);
             Game.gamePopulation.forEach((val, key) => this.logger.verbose(`${key}: ${JSON.stringify(val)}`));
-            this.messenger.sendGameMessageToAll(gameId, MessageType.Claim, currentClaim.message);
+            this.messenger.sendGameMessageToAll(gameId, MessageType.Claim, currentClaim.message, gamePopulation);
         }
         return {ok: true, message: "claim processed."};
     }
