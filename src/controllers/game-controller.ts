@@ -4,9 +4,9 @@ import { Game } from "../game";
 import { v4 as uuidv4 } from 'uuid';
 import { Participant } from "../interfaces/participant";
 import { GameMessage } from "../interfaces/game-message";
-import { Messenger } from "../messenger";
+import messenger, { Messenger } from "../messenger";
 
-const game: Game = new Game(logger, new Messenger());
+const game: Game = new Game(logger, messenger);
 
 /**
  * Create a game.
@@ -56,8 +56,7 @@ export function logout(req: Request, res: Response){
         res.status(400).send({result: '400', message: 'you\'re not logged in.'});
         return;
     }
-    const ws = Game.wsConnections.get(req.session.userId);
-
+    const ws = messenger.wsConnections.get(req.session.userId);
     logger.log('info', `Destroying session from ${req.session.userId} `);
     req.session.destroy(() => {
         if (ws) {
@@ -111,7 +110,7 @@ export function startGame(req: Request, res: Response){
     }
 
     res.send(result);
-    game.startRound(gameId, Game.gamePopulation, Game.wsConnections);
+    game.startRound(gameId, Game.gamePopulation);
 }
 
 /**

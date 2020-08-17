@@ -9,6 +9,8 @@ import { Result } from "./types/result";
 import logger from "./logger";
 
 export class Messenger{
+    wsConnections = new Map<string, WebSocket>();
+
     sendGameMessageToAll(gameId: string, messageType: MessageType, message: any){
         const existingGame = Game.gamePopulation.get(gameId);
         const gameMessage: GameMessage = {
@@ -18,9 +20,9 @@ export class Messenger{
         logger.debug(`sending gameMessage: ${JSON.stringify(gameMessage)}`);
         existingGame.gameMessageLog.push(gameMessage);
         existingGame.participants.forEach((participant: Participant) => {
-            const participantConnection = Game.wsConnections.get(participant.userId);
+            const participantConnection = this.wsConnections.get(participant.userId);
             if (participantConnection){
-                Game.wsConnections.get(participant.userId).send(JSON.stringify(gameMessage));
+                this.wsConnections.get(participant.userId).send(JSON.stringify(gameMessage));
             }
             else{
                 logger.error(`no connection found to send gameMessage to ${participant.userId}`);
@@ -28,7 +30,7 @@ export class Messenger{
         });
     }
 
-    sendGameMessageToOne(gameId: string, participantId: string, messageType: MessageType, message: any, gamePopulation: Map<string, GameInterface>, wsConnections: Map<string, WebSocket>): Result<string>{
+    sendGameMessageToOne(gameId: string, participantId: string, messageType: MessageType, message: any, gamePopulation: Map<string, GameInterface>): Result<string>{
         if (!gameId){
             return {ok: false, message: ErrorMessage.NoGameIDProvided};
         }
@@ -44,9 +46,6 @@ export class Messenger{
         if (!gamePopulation){
             return {ok: false, message: ErrorMessage.NoGamePopulationProvided};
         }
-        if (!wsConnections){
-            return {ok: false, message: ErrorMessage.NoConnectionListProvided};
-        }
         const existingGame = gamePopulation.get(gameId);
         if (!existingGame){
             return {ok: false, message: ErrorMessage.GameNotFound};
@@ -56,7 +55,7 @@ export class Messenger{
             message
         }
         existingGame.gameMessageLog.push(gameMessage);
-        const wsConnection = wsConnections.get(participantId);
+        const wsConnection = this.wsConnections.get(participantId);
         if (!wsConnection){
             return {ok: false, message: ErrorMessage.ParticipantNotInConnectionList};
         }
@@ -64,3 +63,5 @@ export class Messenger{
         return {ok: true, value: "message sent."};
     }
 }
+
+export default new Messenger();

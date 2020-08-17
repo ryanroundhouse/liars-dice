@@ -2,7 +2,7 @@
 import app from "./app";
 import WebSocket from "ws";
 import sessionParser from "./session-parser";
-import { Game } from "./game";
+import messenger from "./messenger";
 import logger from "./logger";
 
 /**
@@ -39,14 +39,14 @@ const server = app.listen(app.get("port"), () => {
     // hacky workaround to use express-session with ws.
     const userId = (request as any).session.userId;
 
-    Game.wsConnections.set(userId.toString(), ws);
+    messenger.wsConnections.set(userId.toString(), ws);
 
     ws.on('message', (message) => {
       logger.log('info', `Received message ${message} from user ${userId}`);
     });
 
     ws.on('close', () => {
-      Game.wsConnections.delete(userId.toString());
+      messenger.wsConnections.delete(userId.toString());
     });
   });
 

@@ -37,7 +37,7 @@ describe ("messenger tests", () => {
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const messenger = new Messenger();
 
-            const result: Result<string> = messenger.sendGameMessageToOne(null, participantId, messageType, message, gamePopulation, wsConnections);
+            const result: Result<string> = messenger.sendGameMessageToOne(null, participantId, messageType, message, gamePopulation);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGameIDProvided);
         });
@@ -50,7 +50,7 @@ describe ("messenger tests", () => {
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const messenger = new Messenger();
 
-            const result: Result<string> = messenger.sendGameMessageToOne(gameId, null, messageType, message, gamePopulation, wsConnections);
+            const result: Result<string> = messenger.sendGameMessageToOne(gameId, null, messageType, message, gamePopulation);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoParticipantProvided);
         });
@@ -63,7 +63,7 @@ describe ("messenger tests", () => {
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const messenger = new Messenger();
 
-            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, null, message, gamePopulation, wsConnections);
+            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, null, message, gamePopulation);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoMessageTypeProvided);
         });
@@ -76,7 +76,7 @@ describe ("messenger tests", () => {
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const messenger = new Messenger();
 
-            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, messageType, null, gamePopulation, wsConnections);
+            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, messageType, null, gamePopulation);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoMessageProvided);
         });
@@ -89,7 +89,7 @@ describe ("messenger tests", () => {
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const messenger = new Messenger();
 
-            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, messageType, message, null, wsConnections);
+            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, messageType, message, null);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
         });
@@ -99,12 +99,26 @@ describe ("messenger tests", () => {
             const messageType: MessageType = MessageType.GameStarted;
             const message: string = "message";
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const messenger = new Messenger();
 
-            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation, null);
+            const startingPlayer: Participant = {
+                userId: "userId",
+                name: "name",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: false
+            };
+            const gameInterface: GameInterface = {
+                started: false,
+                finished: false,
+                gameMessageLog: [],
+                participants: [startingPlayer]
+            }
+            gamePopulation.set(gameId, gameInterface);
+
+            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation);
             result.ok.should.be.false;
-            result.message.should.equal(ErrorMessage.NoConnectionListProvided);
+            result.message.should.equal(ErrorMessage.ParticipantNotInConnectionList);
         });
         it("sendGameMessageToOne fails if gameId not in gamePopulation", () => {
             const gameId: string = "gameId";
@@ -126,10 +140,9 @@ describe ("messenger tests", () => {
                 participants: [participant]
             }
             gamePopulation.set("some other gameId", gameInterface);
-            const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const messenger = new Messenger();
 
-            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation, wsConnections);
+            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.GameNotFound);
         });
@@ -153,10 +166,9 @@ describe ("messenger tests", () => {
                 participants: [participant]
             }
             gamePopulation.set(gameId, gameInterface);
-            const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             const messenger = new Messenger();
 
-            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation, wsConnections);
+            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.ParticipantNotInConnectionList);
         });
@@ -189,8 +201,9 @@ describe ("messenger tests", () => {
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
             wsConnections.set(participantId, webSocket);
             const messenger = new Messenger();
+            messenger.wsConnections = wsConnections;
 
-            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation, wsConnections);
+            const result: Result<string> = messenger.sendGameMessageToOne(gameId, participantId, messageType, message, gamePopulation);
             result.ok.should.be.true;
             expect(webSocketStub.send.calledOnce).to.be.true;
             webSocketStub.send.firstCall.args[0].should.equal(JSON.stringify(gameMessage));

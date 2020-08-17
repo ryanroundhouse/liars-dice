@@ -14,9 +14,9 @@ import { GameOver } from "./interfaces/game-over";
 import { Messenger } from "./messenger";
 
 export class Game{
-    static wsConnections = new Map<string, WebSocket>();
     static gamePopulation = new Map<string, GameInterface>();
 
+    // need this to be the singleton messenger!
     constructor(private logger: winston.Logger, private messenger: Messenger){}
 
     createGame(userId:string, gamePopulation: Map<string, GameInterface>): Result<string>{
@@ -162,7 +162,7 @@ export class Game{
         return {ok:true, value: startingPlayer};
     }
 
-    generateDiceAndNotifyGameMessage(gameId: string, startingPlayer: Participant, messageType: MessageType, gamePopulation: Map<string, GameInterface>, wsConnections: Map<string, WebSocket>): Result<string>{
+    generateDiceAndNotifyGameMessage(gameId: string, startingPlayer: Participant, messageType: MessageType, gamePopulation: Map<string, GameInterface>): Result<string>{
         if (!gameId){
             return { ok: false, message: ErrorMessage.NoGameIDProvided };
         }
@@ -175,14 +175,12 @@ export class Game{
         if (!gamePopulation){
             return { ok: false, message: ErrorMessage.NoGamePopulationProvided };
         }
-        if (!wsConnections){
-            return { ok: false, message: ErrorMessage.NoConnectionListProvided };
-        }
         const existingGame = gamePopulation.get(gameId);
         if (existingGame == null){
             return { ok: false, message: ErrorMessage.GameNotFound };
         }
         // send everyone's starting info
+        const resultList: Result<string>[] = [];
         existingGame.participants.forEach(participant => {
             participant.roll = [];
             for (let i = 0; i < participant.numberOfDice; i++){
@@ -196,20 +194,22 @@ export class Game{
                 participant,
                 startingPlayer: starting
             }
-            this.messenger.sendGameMessageToOne(gameId, participant.userId, MessageType.RoundStarted, roundSetup, gamePopulation, wsConnections);
+            resultList.push(this.messenger.sendGameMessageToOne(gameId, participant.userId, MessageType.RoundStarted, roundSetup, gamePopulation));
         });
+        if (!resultList.every(result => result.ok)){
+            let errorMessages: string = "";
+            resultList.filter(result => !result.ok).forEach(result => errorMessages += result.message);
+            return {ok: false, message: errorMessages};
+        }
         return { ok: true, message: "messages sent" };
     }
 
-    startRound(gameId: string, gamePopulation: Map<string, GameInterface>, wsConnections: Map<string, WebSocket>): Result<string>{
+    startRound(gameId: string, gamePopulation: Map<string, GameInterface>): Result<string>{
         if (!gamePopulation){
             return { ok: false, message: ErrorMessage.NoGamePopulationProvided };
         }
         if (!gameId){
             return { ok: false, message: ErrorMessage.NoGameIDProvided };
-        }
-        if (!wsConnections){
-            return { ok: false, message: ErrorMessage.NoConnectionListProvided };
         }
         const existingGame = gamePopulation.get(gameId);
         if (existingGame == null){
@@ -221,7 +221,7 @@ export class Game{
             return {ok: false, message: calcStartingPlayerResult.message};
         }
 
-        const generateDiceAndNotifyResult: Result<string> = this.generateDiceAndNotifyGameMessage(gameId, calcStartingPlayerResult.value, MessageType.RoundStarted, gamePopulation, wsConnections);
+        const generateDiceAndNotifyResult: Result<string> = this.generateDiceAndNotifyGameMessage(gameId, calcStartingPlayerResult.value, MessageType.RoundStarted, gamePopulation);
         if (!generateDiceAndNotifyResult.ok){
             return {ok: false, message: generateDiceAndNotifyResult.message};
         }
@@ -317,7 +317,7 @@ export class Game{
                 existingGame.finished = true;
             }
             else{
-                this.startRound(gameId, Game.gamePopulation, Game.wsConnections);
+                this.startRound(gameId, Game.gamePopulation);
             }
         }
         // pass it on to the next player.
