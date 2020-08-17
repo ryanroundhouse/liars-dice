@@ -11,6 +11,7 @@ import { ErrorMessage } from "./enums/errorMessage";
 import { Claim } from "./interfaces/claim";
 import { GameOver } from "./interfaces/game-over";
 import { Messenger } from "./messenger";
+import { exit } from "shelljs";
 
 export class Game{
     static gamePopulation = new Map<string, GameInterface>();
@@ -266,79 +267,95 @@ export class Game{
         }
         // cheat is called.  Resolve.
         if (currentClaim.message.cheat){
-            // can't call cheat with no claims
-            if (lastMessage.messageType !== MessageType.Claim){
-                this.logger.log('info', `${playerId} tried to call cheat in ${gameId} when there hasn't been a claim.`);
-                return {ok: false, message: 'can\'t call cheat if no one has made a claim.'};
-            }
-            const lastClaim = lastMessage.message as Claim;
-            const challengedPlayer = existingGame.participants.find(participant => participant.userId === lastClaim.playerId);
-            const numberOfThatRoll = Game.countNumberOfThatRoll(challengedPlayer.roll, lastClaim.value);
-            let roundResults: RoundResults;
-            if (lastClaim.quantity > numberOfThatRoll){
-                this.logger.info('cheat call successful');
-                challengedPlayer.numberOfDice--;
-                if (challengedPlayer.numberOfDice === 0){
-                    challengedPlayer.eliminated = true;
-                }
-                roundResults = {
-                    callingPlayer: existingGame.participants.find(participant => participant.userId === playerId),
-                    calledPlayer: challengedPlayer,
-                    claim: lastClaim,
-                    claimSuccess: true,
-                    playerEliminated: challengedPlayer.numberOfDice === 0
-                }
-            }
-            else{
-                this.logger.info('cheat call unsuccessful');
-                const challenger = existingGame.participants.find(participant => participant.userId === playerId);
-                challenger.numberOfDice--;
-                if (challenger.numberOfDice === 0){
-                    challenger.eliminated = true;
-                }
-                roundResults = {
-                    callingPlayer: existingGame.participants.find(participant => participant.userId === playerId),
-                    calledPlayer: challengedPlayer,
-                    claim: lastClaim,
-                    claimSuccess: false,
-                    playerEliminated: challenger.numberOfDice === 0
-                }
-            }
-            this.logger.verbose(`gamePopulation is now:`);
-            Game.gamePopulation.forEach((val, key) => this.logger.verbose(`${key}: ${JSON.stringify(val)}`));
-            this.messenger.sendGameMessageToAll(gameId, MessageType.RoundResults, roundResults, gamePopulation);
-            const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
-            if (activePlayers.length === 1){
-                const gameOver: GameOver = {
-                    winner: activePlayers[0]
-                }
-                this.messenger.sendGameMessageToAll(gameId, MessageType.GameOver, gameOver, gamePopulation);
-                existingGame.finished = true;
-            }
-            else{
-                this.startRound(gameId, Game.gamePopulation);
+            const result = this.resolveCheat(gameId, playerId, lastMessage, existingGame, gamePopulation);
+            if (!result.ok){
+                return result;
             }
         }
         // pass it on to the next player.
         else{
-            const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
-            this.logger.debug(`activePlayers: ${JSON.stringify(activePlayers)}`);
-            const currentPlayer = activePlayers.find(participant => participant.userId === playerId);
-            this.logger.debug(`currentPlayer: ${JSON.stringify(currentPlayer)}`);
-            let nextPlayer: Participant;
-            if (activePlayers.indexOf(currentPlayer) === activePlayers.length - 1){
-                nextPlayer = activePlayers[0];
+            const result = this.resolveClaim(gameId, playerId, currentClaim, existingGame, gamePopulation);
+            if (!result.ok){
+                return result;
             }
-            else{
-                nextPlayer = activePlayers[activePlayers.indexOf(currentPlayer) + 1];
-            }
-            currentClaim.message.nextPlayerId = nextPlayer.userId;
-            currentClaim.message.playerId = playerId;
-            this.logger.verbose(`gamePopulation is now:`);
-            Game.gamePopulation.forEach((val, key) => this.logger.verbose(`${key}: ${JSON.stringify(val)}`));
-            this.messenger.sendGameMessageToAll(gameId, MessageType.Claim, currentClaim.message, gamePopulation);
         }
         return {ok: true, message: "claim processed."};
+    }
+
+    resolveClaim(gameId: string, playerId: string, currentClaim: GameMessage, existingGame: GameInterface, gamePopulation: Map<string, GameInterface>): Result<string>{
+        const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
+        this.logger.debug(`activePlayers: ${JSON.stringify(activePlayers)}`);
+        const currentPlayer = activePlayers.find(participant => participant.userId === playerId);
+        this.logger.debug(`currentPlayer: ${JSON.stringify(currentPlayer)}`);
+        let nextPlayer: Participant;
+        if (activePlayers.indexOf(currentPlayer) === activePlayers.length - 1){
+            nextPlayer = activePlayers[0];
+        }
+        else{
+            nextPlayer = activePlayers[activePlayers.indexOf(currentPlayer) + 1];
+        }
+        currentClaim.message.nextPlayerId = nextPlayer.userId;
+        currentClaim.message.playerId = playerId;
+        this.logger.verbose(`gamePopulation is now:`);
+        Game.gamePopulation.forEach((val, key) => this.logger.verbose(`${key}: ${JSON.stringify(val)}`));
+        const result = this.messenger.sendGameMessageToAll(gameId, MessageType.Claim, currentClaim.message, gamePopulation);
+        return result;
+    }
+
+    resolveCheat(gameId: string, playerId: string, lastMessage: GameMessage, existingGame: GameInterface, gamePopulation: Map<string, GameInterface>): Result<string>{
+        // can't call cheat with no claims
+        if (lastMessage.messageType !== MessageType.Claim){
+            this.logger.log('info', `${playerId} tried to call cheat in ${gameId} when there hasn't been a claim.`);
+            return {ok: false, message: 'can\'t call cheat if no one has made a claim.'};
+        }
+        const lastClaim = lastMessage.message as Claim;
+        const challengedPlayer = existingGame.participants.find(participant => participant.userId === lastClaim.playerId);
+        const numberOfThatRoll = Game.countNumberOfThatRoll(challengedPlayer.roll, lastClaim.value);
+        let roundResults: RoundResults;
+        if (lastClaim.quantity > numberOfThatRoll){
+            this.logger.info('cheat call successful');
+            challengedPlayer.numberOfDice--;
+            if (challengedPlayer.numberOfDice === 0){
+                challengedPlayer.eliminated = true;
+            }
+            roundResults = {
+                callingPlayer: existingGame.participants.find(participant => participant.userId === playerId),
+                calledPlayer: challengedPlayer,
+                claim: lastClaim,
+                claimSuccess: true,
+                playerEliminated: challengedPlayer.numberOfDice === 0
+            }
+        }
+        else{
+            this.logger.info('cheat call unsuccessful');
+            const challenger = existingGame.participants.find(participant => participant.userId === playerId);
+            challenger.numberOfDice--;
+            if (challenger.numberOfDice === 0){
+                challenger.eliminated = true;
+            }
+            roundResults = {
+                callingPlayer: existingGame.participants.find(participant => participant.userId === playerId),
+                calledPlayer: challengedPlayer,
+                claim: lastClaim,
+                claimSuccess: false,
+                playerEliminated: challenger.numberOfDice === 0
+            }
+        }
+        this.logger.verbose(`gamePopulation is now:`);
+        Game.gamePopulation.forEach((val, key) => this.logger.verbose(`${key}: ${JSON.stringify(val)}`));
+        this.messenger.sendGameMessageToAll(gameId, MessageType.RoundResults, roundResults, gamePopulation);
+        const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
+        if (activePlayers.length === 1){
+            const gameOver: GameOver = {
+                winner: activePlayers[0]
+            }
+            this.messenger.sendGameMessageToAll(gameId, MessageType.GameOver, gameOver, gamePopulation);
+            existingGame.finished = true;
+        }
+        else{
+            this.startRound(gameId, Game.gamePopulation);
+        }
+        return {ok: true};
     }
 
     static getRandomInt(max: number) {
