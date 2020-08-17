@@ -4,7 +4,7 @@ import { Game } from "../game";
 import { v4 as uuidv4 } from 'uuid';
 import { Participant } from "../interfaces/participant";
 import { GameMessage } from "../interfaces/game-message";
-import messenger, { Messenger } from "../messenger";
+import messenger from "../messenger";
 
 const game: Game = new Game(logger, messenger);
 

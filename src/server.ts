@@ -1,4 +1,3 @@
-
 import app from "./app";
 import WebSocket from "ws";
 import sessionParser from "./session-parser";
@@ -40,6 +39,7 @@ const server = app.listen(app.get("port"), () => {
     const userId = (request as any).session.userId;
 
     messenger.wsConnections.set(userId.toString(), ws);
+    logger.debug(`added ${userId} to messenger. There are now ${messenger.wsConnections.size} connections`);
 
     ws.on('message', (message) => {
       logger.log('info', `Received message ${message} from user ${userId}`);

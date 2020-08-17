@@ -170,6 +170,7 @@ describe("game functionality", () => {
         it("can join game if games exist, but you're not in it", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
 
             const game: Game = new Game(logger, messengerStub);
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
@@ -187,6 +188,7 @@ describe("game functionality", () => {
         it("can join game if games exist, participant in another game, but game is finished", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
             const playerId: string = "test";
             const participant: Participant = {
                 userId: playerId,
@@ -211,6 +213,7 @@ describe("game functionality", () => {
         it("can join game if games exist, but not a participant in another game", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
             const otherPlayerId: string = "not test";
             const participant: Participant = {
                 userId: otherPlayerId,
@@ -235,6 +238,7 @@ describe("game functionality", () => {
         it("can join game if games exist, but player was already eliminated from their game", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
             const playerId: string = "not test";
             const participant: Participant = {
                 userId: playerId,

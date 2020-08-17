@@ -11,7 +11,6 @@ import { ErrorMessage } from "./enums/errorMessage";
 import { Claim } from "./interfaces/claim";
 import { GameOver } from "./interfaces/game-over";
 import { Messenger } from "./messenger";
-import { exit } from "shelljs";
 
 export class Game{
     static gamePopulation = new Map<string, GameInterface>();
@@ -51,7 +50,7 @@ export class Game{
         return {ok: true, value: id};
     }
 
-    joinGame(userId: string, gameId: string, name: string, gamePopulation: Map<string, GameInterface>): Result<Participant[]>{
+    joinGame(userId: string, gameId: string, name: string, gamePopulation: Map<string, GameInterface>): Result<any>{
         if (!userId){
             return { ok: false, message: ErrorMessage.NoUserIDProvided };
         }
@@ -79,6 +78,7 @@ export class Game{
         if (alreadyInGame){
             return {ok: false, message: ErrorMessage.CantJoinGameWhenInRunningGame };
         }
+        this.logger.debug(`${userId} is attempting to join game ${gameId}`);
         const participant: Participant = {
             userId,
             name,
@@ -87,7 +87,11 @@ export class Game{
             eliminated: false
         };
         existingGame.participants.push(participant);
-        this.messenger.sendGameMessageToAll(gameId, MessageType.PlayerJoined, existingGame.participants[existingGame.participants.length - 1], gamePopulation);
+        this.logger.debug(`${gameId}, ${MessageType.PlayerJoined}, ${existingGame.participants[existingGame.participants.length - 1]}, ${gamePopulation}`);
+        const result = this.messenger.sendGameMessageToAll(gameId, MessageType.PlayerJoined, existingGame.participants[existingGame.participants.length - 1], gamePopulation);
+        if (!result.ok){
+            return result;
+        }
         return {ok: true, value: existingGame.participants};
     }
 

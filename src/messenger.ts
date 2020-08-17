@@ -14,16 +14,12 @@ export class Messenger{
         if (!gameId){
             return {ok: false, message: ErrorMessage.NoGameIDProvided};
         }
-        if (!messageType){
+        if (!Object.values(MessageType).includes(messageType)){
             return {ok: false, message: ErrorMessage.NoMessageTypeProvided};
-        }
-        if (!message){
-            return {ok: false, message: ErrorMessage.NoMessageProvided};
         }
         if (!gamePopulation){
             return {ok: false, message: ErrorMessage.NoGamePopulationProvided};
         }
-
         const existingGame = gamePopulation.get(gameId);
         if (!existingGame){
             return {ok: false, message: ErrorMessage.GameNotFound};

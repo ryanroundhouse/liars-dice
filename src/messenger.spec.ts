@@ -237,17 +237,6 @@ describe ("messenger tests", () => {
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoMessageTypeProvided);
         });
-        it("sendGameMessageToAll fails if no message", () => {
-            const gameId: string = "gameId";
-            const messageType: MessageType = MessageType.GameStarted;
-            const message: string = "message";
-            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const messenger = new Messenger();
-
-            const result: Result<string> = messenger.sendGameMessageToAll(gameId, messageType, null, gamePopulation);
-            result.ok.should.be.false;
-            result.message.should.equal(ErrorMessage.NoMessageProvided);
-        });
         it("sendGameMessageToAll fails if no gamePopulation", () => {
             const gameId: string = "gameId";
             const messageType: MessageType = MessageType.GameStarted;
@@ -367,7 +356,7 @@ describe ("messenger tests", () => {
             const startingPlayerMessage = JSON.parse(startingPlayerWebSocketStub.send.firstCall.args[0]);
             startingPlayerMessage.message.should.equal(message);
             startingPlayerMessage.messageType.should.equal(messageType);
-            
+
             gameInterface.gameMessageLog.length.should.equal(1);
             expect(gameInterface.gameMessageLog[0].message).to.equal(message);
             expect(gameInterface.gameMessageLog[0].messageType).to.equal(messageType);
