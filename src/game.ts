@@ -281,7 +281,6 @@ export class Game{
                 return {ok: false, message: ErrorMessage.NotYourTurn};
             }
         }
-        // haven't thought through how to test the rest of this method.  I'd rather test the next 2 parts independently, but maybe I'll add 1 happy case.
         // cheat is called.  Resolve.
         if (currentClaim.message.cheat){
             const result = this.resolveCheat(gameId, playerId, lastMessage, existingGame, gamePopulation);
@@ -301,6 +300,21 @@ export class Game{
 
     // untested
     resolveClaim(gameId: string, playerId: string, currentClaim: GameMessage, existingGame: GameInterface, gamePopulation: Map<string, GameInterface>): Result<string>{
+        if (!gameId){
+            return {ok: false, message: ErrorMessage.NoGameIDProvided};
+        }
+        if (!playerId){
+            return {ok: false, message: ErrorMessage.NoUserIDProvided};
+        }
+        if (!currentClaim){
+            return {ok: false, message: ErrorMessage.NoClaimProvided};
+        }
+        if (!existingGame){
+            return {ok: false, message: ErrorMessage.GameNotFound};
+        }
+        if (!gamePopulation){
+            return {ok: false, message: ErrorMessage.NoGamePopulationProvided};
+        }
         const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
         this.logger?.debug(`activePlayers: ${JSON.stringify(activePlayers)}`);
         const currentPlayer = activePlayers.find(participant => participant.userId === playerId);

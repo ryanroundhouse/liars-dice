@@ -2,7 +2,7 @@ process.env.NODE_ENV = 'test'
 /* tslint:disable:no-unused-expression */
 
 import "mocha";
-import chai, { expect } from "chai";
+import chai, { expect, assert } from "chai";
 import { Game } from "./game";
 import { Messenger } from "./messenger";
 import { Result } from "./types/result";
@@ -909,6 +909,404 @@ describe("game functionality", () => {
             const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NotYourTurn);
+        });        
+        it("processClaim fails if resolve cheat fails", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: {
+                    cheat: true
+                }
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const player: Participant = {
+                userId: playerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: false,
+                gameMessageLog: [],
+                participants: [player]
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.RoundStarted,
+                message: {
+                    participant:{
+                        userId: playerId
+                    },
+                    startingPlayer: playerId
+                }
+            }
+            gameInterface.gameMessageLog.push(lastMessage);
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null, null);
+            const errorMessage: string = "ruh roh!";
+            const errorResult: Result<string> = {
+                ok: false,
+                message: errorMessage
+            }
+            sinon.stub(game, "resolveCheat").returns(errorResult);
+
+            const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(errorMessage);
+        });
+        it("processClaim succeeds if resolve cheat succeeds", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: {
+                    cheat: true
+                }
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const player: Participant = {
+                userId: playerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: false,
+                gameMessageLog: [],
+                participants: [player]
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.RoundStarted,
+                message: {
+                    participant:{
+                        userId: playerId
+                    },
+                    startingPlayer: playerId
+                }
+            }
+            gameInterface.gameMessageLog.push(lastMessage);
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null, null);
+            const successMessage: string = "oh yeah!";
+            const successResult: Result<string> = {
+                ok: true,
+                message: successMessage
+            }
+            sinon.stub(game, "resolveCheat").returns(successResult);
+
+            const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
+            result.ok.should.be.true;
+            result.message.should.equal("claim processed.");
+        });        
+        it("processClaim fails if resolve claim fails", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: {
+                    cheat: false
+                }
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const player: Participant = {
+                userId: playerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: false,
+                gameMessageLog: [],
+                participants: [player]
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.RoundStarted,
+                message: {
+                    participant:{
+                        userId: playerId
+                    },
+                    startingPlayer: playerId
+                }
+            }
+            gameInterface.gameMessageLog.push(lastMessage);
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null, null);
+            const errorMessage: string = "ruh roh!";
+            const errorResult: Result<string> = {
+                ok: false,
+                message: errorMessage
+            }
+            sinon.stub(game, "resolveClaim").returns(errorResult);
+
+            const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(errorMessage);
+        });
+        it("processClaim succeeds if resolve claim succeeds", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: {
+                    cheat: false
+                }
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const player: Participant = {
+                userId: playerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: false,
+                gameMessageLog: [],
+                participants: [player]
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.RoundStarted,
+                message: {
+                    participant:{
+                        userId: playerId
+                    },
+                    startingPlayer: playerId
+                }
+            }
+            gameInterface.gameMessageLog.push(lastMessage);
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null, null);
+            const successMessage: string = "oh yeah!";
+            const successResult: Result<string> = {
+                ok: true,
+                message: successMessage
+            }
+            sinon.stub(game, "resolveClaim").returns(successResult);
+
+            const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
+            result.ok.should.be.true;
+            result.message.should.equal("claim processed.");
+        });
+    });
+    describe ("resolveClaim tests", () => {
+        it("resolveClaim fails if no gameId", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: ""
+            };
+            const existingGame : GameInterface = {
+                participants: [],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveClaim(null, playerId, currentClaim, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGameIDProvided);
+        });
+        it("resolveClaim fails if no playerId", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: ""
+            };
+            const existingGame : GameInterface = {
+                participants: [],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveClaim(gameId, null, currentClaim, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoUserIDProvided);
+        });
+        it("resolveClaim fails if no currentClaim", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: ""
+            };
+            const existingGame : GameInterface = {
+                participants: [],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveClaim(gameId, playerId, null, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoClaimProvided);
+        });
+        it("resolveClaim fails if no existingGame", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: ""
+            };
+            const existingGame : GameInterface = {
+                participants: [],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveClaim(gameId, playerId, currentClaim, null, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.GameNotFound);
+        });
+        it("resolveClaim fails if no gamePopulation", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: ""
+            };
+            const existingGame : GameInterface = {
+                participants: [],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveClaim(gameId, playerId, currentClaim, existingGame, null);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
+        });
+        it("resolveClaim succeeds and proceeds to next player", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const currentClaim: Claim = {
+                quantity: 1,
+                value: 1,
+                cheat: false
+            }
+            const expectedClaim: Claim = {
+                quantity: 1,
+                value: 1,
+                cheat: false,
+                nextPlayerId: nextPlayerId,
+                playerId: playerId
+            }
+            const currentClaimMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: currentClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game = new Game(null, messenger);
+
+            const result: Result<string> = game.resolveClaim(gameId, playerId, currentClaimMessage, existingGame, gamePopulation);
+            result.ok.should.be.true;
+            expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
+            const actualClaim: Claim = messengerStub.sendGameMessageToAll.getCall(0).args[2];
+            assert.equal(JSON.stringify(actualClaim), JSON.stringify(expectedClaim));
+        });
+        it("resolveClaim succeeds and proceeds to next player even with an eliminated player in the middle", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const eliminatedPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const eliminatedPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "eliminated name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: true
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const currentClaim: Claim = {
+                quantity: 1,
+                value: 1,
+                cheat: false
+            }
+            const expectedClaim: Claim = {
+                quantity: 1,
+                value: 1,
+                cheat: false,
+                nextPlayerId: nextPlayerId,
+                playerId: playerId
+            }
+            const currentClaimMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: currentClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [nextPlayer, eliminatedPlayer, player],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game = new Game(null, messenger);
+
+            const result: Result<string> = game.resolveClaim(gameId, playerId, currentClaimMessage, existingGame, gamePopulation);
+            result.ok.should.be.true;
+            expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
+            const actualClaim: Claim = messengerStub.sendGameMessageToAll.getCall(0).args[2];
+            assert.equal(JSON.stringify(actualClaim), JSON.stringify(expectedClaim));
         });
     });
 });
