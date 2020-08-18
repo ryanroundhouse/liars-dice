@@ -16,6 +16,7 @@ import { MessageType } from "./enums/messageType";
 import { RoundResults } from "./interfaces/round-results";
 import { Claim } from "./interfaces/claim";
 import sinon from "sinon";
+import { GameOver } from "./interfaces/game-over";
 
 chai.should();
 
@@ -517,7 +518,7 @@ describe("game functionality", () => {
                 callingPlayer: firstParticipant,
                 calledPlayer: secondParticipant,
                 claim,
-                claimSuccess: true,
+                cheatSuccess: true,
                 playerEliminated: false
             }
             const message: GameMessage = {
@@ -1307,6 +1308,567 @@ describe("game functionality", () => {
             expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
             const actualClaim: Claim = messengerStub.sendGameMessageToAll.getCall(0).args[2];
             assert.equal(JSON.stringify(actualClaim), JSON.stringify(expectedClaim));
+        });
+    });
+    describe ("resolveCheat tests", () => {
+        it("resolveCheat fails if no gameId", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveCheat(null, playerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGameIDProvided);
+        });
+        it("resolveCheat fails if no playerId", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveCheat(gameId, null, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoUserIDProvided);
+        });
+        it("resolveCheat fails if no lastMessage", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveCheat(gameId, playerId, null, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoClaimProvided);
+        });
+        it("resolveCheat fails if no existingGame", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveCheat(gameId, playerId, lastMessage, null, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.GameNotFound);
+        });
+        it("resolveCheat fails if no gamePopulation", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveCheat(gameId, playerId, lastMessage, existingGame, null);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
+        });
+        it("resolveCheat fails if last message isn't a claim", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.RoundStarted,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveCheat(gameId, playerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.CanOnlyCheatClaim);
+        });
+        it("resolveCheat succeeds if player was cheating", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 5,
+                roll: [1,2,3,4,5],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 5,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const expectedRoundResults: RoundResults = {
+                callingPlayer: nextPlayer,
+                calledPlayer: player,
+                claim: lastClaim,
+                cheatSuccess: true,
+                playerEliminated: false
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game = new Game(null, messengerStub);
+            const startRoundSuccess = {ok: true};
+            const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
+
+            const result: Result<string> = game.resolveCheat(gameId, nextPlayerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.true;
+            expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
+            const actualRoundResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(0).args[2];
+            assert.equal(JSON.stringify(actualRoundResult), JSON.stringify(expectedRoundResults));
+            assert.equal(player.numberOfDice, 4);
+            assert.equal(nextPlayer.numberOfDice, 5);
+            expect(startRoundStub.calledOnce).to.be.true;
+        });
+        it("resolveCheat fails if player wasn't cheating", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 5,
+                roll: [2,2,3,4,5],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 5,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const expectedRoundResults: RoundResults = {
+                callingPlayer: nextPlayer,
+                calledPlayer: player,
+                claim: lastClaim,
+                cheatSuccess: false,
+                playerEliminated: false
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game = new Game(null, messengerStub);
+            const startRoundSuccess = {ok: true};
+            const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
+
+            const result: Result<string> = game.resolveCheat(gameId, nextPlayerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.true;
+            expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
+            const actualRoundResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(0).args[2];
+            assert.equal(JSON.stringify(actualRoundResult), JSON.stringify(expectedRoundResults));
+            assert.equal(player.numberOfDice, 5);
+            assert.equal(nextPlayer.numberOfDice, 4);
+            expect(startRoundStub.calledOnce).to.be.true;
+        });
+        it("resolveCheat fails if startRound fails", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 5,
+                roll: [2,2,3,4,5],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 5,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const expectedRoundResults: RoundResults = {
+                callingPlayer: nextPlayer,
+                calledPlayer: player,
+                claim: lastClaim,
+                cheatSuccess: false,
+                playerEliminated: false
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game = new Game(null, messengerStub);
+            const startRoundSuccess = {ok: false};
+            const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
+
+            const result: Result<string> = game.resolveCheat(gameId, nextPlayerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
+            const actualRoundResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(0).args[2];
+            assert.equal(JSON.stringify(actualRoundResult), JSON.stringify(expectedRoundResults));
+            assert.equal(player.numberOfDice, 5);
+            assert.equal(nextPlayer.numberOfDice, 4);
+            expect(startRoundStub.calledOnce).to.be.true;
+        });
+        it("resolveCheat will eliminate the cheater", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 1,
+                roll: [1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 5,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const expectedRoundResults: RoundResults = {
+                callingPlayer: nextPlayer,
+                calledPlayer: player,
+                claim: lastClaim,
+                cheatSuccess: true,
+                playerEliminated: true
+            }
+            const expectedGameOverResults: GameOver = {
+                winner: nextPlayer
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game = new Game(null, messengerStub);
+            const startRoundSuccess = {ok: true};
+            const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
+
+            const result: Result<string> = game.resolveCheat(gameId, nextPlayerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.true;
+            expect(messengerStub.sendGameMessageToAll.calledTwice).to.be.true;
+            const actualRoundResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(0).args[2];
+            assert.equal(JSON.stringify(actualRoundResult), JSON.stringify(expectedRoundResults));
+            assert.equal(player.numberOfDice, 0);
+            assert.equal(nextPlayer.numberOfDice, 5);
+            const actualGameOverResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(1).args[2];
+            assert.equal(JSON.stringify(actualGameOverResult), JSON.stringify(expectedGameOverResults));
+            expect(startRoundStub.notCalled).to.be.true;
+            expect(existingGame.finished).to.be.true;
+        });
+        it("resolveCheat will eliminate the cheat caller", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 5,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 1,
+                roll: [5],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 1,
+                cheat: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const expectedRoundResults: RoundResults = {
+                callingPlayer: nextPlayer,
+                calledPlayer: player,
+                claim: lastClaim,
+                cheatSuccess: false,
+                playerEliminated: true
+            }
+            const expectedGameOverResults: GameOver = {
+                winner: player
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game = new Game(null, messengerStub);
+            const startRoundSuccess = {ok: true};
+            const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
+
+            const result: Result<string> = game.resolveCheat(gameId, nextPlayerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.true;
+            expect(messengerStub.sendGameMessageToAll.calledTwice).to.be.true;
+            const actualRoundResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(0).args[2];
+            assert.equal(JSON.stringify(actualRoundResult), JSON.stringify(expectedRoundResults));
+            assert.equal(player.numberOfDice, 5);
+            assert.equal(nextPlayer.numberOfDice, 0);
+            const actualGameOverResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(1).args[2];
+            assert.equal(JSON.stringify(actualGameOverResult), JSON.stringify(expectedGameOverResults));
+            expect(startRoundStub.notCalled).to.be.true;
+            expect(existingGame.finished).to.be.true;
         });
     });
 });

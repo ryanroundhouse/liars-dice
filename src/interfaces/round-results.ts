@@ -5,6 +5,6 @@ export interface RoundResults{
     callingPlayer: Participant,
     calledPlayer: Participant,
     claim: Claim,
-    claimSuccess: boolean,
+    cheatSuccess: boolean,
     playerEliminated: boolean
 }

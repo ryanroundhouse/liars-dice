@@ -153,7 +153,7 @@ export class Game{
         else if (lastPlayEvent.messageType === MessageType.RoundResults){
             this.logger?.info(`checking lastPlayEvent: ${JSON.stringify(lastPlayEvent)}`);
             const roundResults = (lastPlayEvent.message as RoundResults);
-            if (roundResults.claimSuccess){
+            if (roundResults.cheatSuccess){
                 startingPlayer = roundResults.calledPlayer;
             }
             else{
@@ -298,7 +298,6 @@ export class Game{
         return {ok: true, message: "claim processed."};
     }
 
-    // untested
     resolveClaim(gameId: string, playerId: string, currentClaim: GameMessage, existingGame: GameInterface, gamePopulation: Map<string, GameInterface>): Result<string>{
         if (!gameId){
             return {ok: false, message: ErrorMessage.NoGameIDProvided};
@@ -334,12 +333,26 @@ export class Game{
         return result;
     }
 
-    // untested
     resolveCheat(gameId: string, playerId: string, lastMessage: GameMessage, existingGame: GameInterface, gamePopulation: Map<string, GameInterface>): Result<string>{
+        if (!gameId){
+            return {ok: false, message: ErrorMessage.NoGameIDProvided};
+        }
+        if (!playerId){
+            return {ok: false, message: ErrorMessage.NoUserIDProvided};
+        }
+        if (!lastMessage){
+            return {ok: false, message: ErrorMessage.NoClaimProvided};
+        }
+        if (!existingGame){
+            return {ok: false, message: ErrorMessage.GameNotFound};
+        }
+        if (!gamePopulation){
+            return {ok: false, message: ErrorMessage.NoGamePopulationProvided};
+        }
         // can't call cheat with no claims
         if (lastMessage.messageType !== MessageType.Claim){
             this.logger?.log('info', `${playerId} tried to call cheat in ${gameId} when there hasn't been a claim.`);
-            return {ok: false, message: 'can\'t call cheat if no one has made a claim.'};
+            return {ok: false, message: ErrorMessage.CanOnlyCheatClaim};
         }
         const lastClaim = lastMessage.message as Claim;
         const challengedPlayer = existingGame.participants.find(participant => participant.userId === lastClaim.playerId);
@@ -355,8 +368,8 @@ export class Game{
                 callingPlayer: existingGame.participants.find(participant => participant.userId === playerId),
                 calledPlayer: challengedPlayer,
                 claim: lastClaim,
-                claimSuccess: true,
-                playerEliminated: challengedPlayer.numberOfDice === 0
+                cheatSuccess: true,
+                playerEliminated: challengedPlayer.eliminated
             }
         }
         else{
@@ -370,8 +383,8 @@ export class Game{
                 callingPlayer: existingGame.participants.find(participant => participant.userId === playerId),
                 calledPlayer: challengedPlayer,
                 claim: lastClaim,
-                claimSuccess: false,
-                playerEliminated: challenger.numberOfDice === 0
+                cheatSuccess: false,
+                playerEliminated: challenger.eliminated
             }
         }
         this.logger?.verbose(`gamePopulation is now:`);
@@ -386,7 +399,10 @@ export class Game{
             existingGame.finished = true;
         }
         else{
-            this.startRound(gameId, Game.gamePopulation);
+            const result = this.startRound(gameId, Game.gamePopulation);
+            if (!result.ok){
+                return result;
+            }
         }
         return {ok: true};
     }

@@ -11,6 +11,7 @@ export enum ErrorMessage{
     NoParticipantProvided = "no participant provided",
     NoMessageProvided = "no message provided",
     NotYourTurn = 'it\'s not your turn.',
+    CanOnlyCheatClaim = 'can\'t call cheat if no one has made a claim.',
     ClaimTooLow = 'you need to make a claim of larger quantity than the last claim or call cheat.',
     ParticipantNotInConnectionList = "participantId not found in wsConnection list.",
     CantCreateNewGameWhenInGame = "player can't create a new game when already in a game.",
