@@ -512,13 +512,14 @@ describe("game functionality", () => {
             const claim: Claim = {
                 quantity: 0,
                 value: 0,
-                cheat: true
+                cheat: true,
+                bangOn: false
             }
             const roundResults: RoundResults = {
                 callingPlayer: firstParticipant,
                 calledPlayer: secondParticipant,
                 claim,
-                cheatSuccess: true,
+                claimSuccess: false,
                 playerEliminated: false
             }
             const message: GameMessage = {
@@ -910,7 +911,7 @@ describe("game functionality", () => {
             const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NotYourTurn);
-        });        
+        });
         it("processClaim fails if resolve cheat fails", () => {
             const gameId: string = "gameId";
             const playerId: string = "playerId";
@@ -957,6 +958,68 @@ describe("game functionality", () => {
             result.ok.should.be.false;
             result.message.should.equal(errorMessage);
         });
+        it("processClaim fails if resolve bangon fails", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "player name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const nextPlayerId: string = "nextPlayerId";
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const currentClaimMessage: Claim = {
+                quantity: 0,
+                value: 0,
+                cheat: false,
+                bangOn: true
+            }
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: currentClaimMessage
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: false,
+                gameMessageLog: [],
+                participants: [player, nextPlayer]
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            }
+            gameInterface.gameMessageLog.push(lastMessage);
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null, null);
+            const errorMessage: string = "ruh roh!";
+            const errorResult: Result<string> = {
+                ok: false,
+                message: errorMessage
+            }
+            const bangOnStub = sinon.stub(game, "resolveBangOn").returns(errorResult);
+
+            const result: Result<string> = game.processClaim(gameId, nextPlayerId, currentClaim, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(errorMessage);
+            expect(bangOnStub.calledOnce).to.be.true;
+        });
         it("processClaim succeeds if resolve cheat succeeds", () => {
             const gameId: string = "gameId";
             const playerId: string = "playerId";
@@ -1002,7 +1065,67 @@ describe("game functionality", () => {
             const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
             result.ok.should.be.true;
             result.message.should.equal("claim processed.");
-        });        
+        });
+        it("processClaim succeeds if resolve bangon succeeds", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "player name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const nextPlayerId: string = "nextPlayerId";
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const currentClaimMessage: Claim = {
+                quantity: 0,
+                value: 0,
+                cheat: false,
+                bangOn: true
+            }
+            const currentClaim: GameMessage = {
+                messageType: MessageType.Claim,
+                message: currentClaimMessage
+            };            
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: false,
+                gameMessageLog: [],
+                participants: [player, nextPlayer]
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            }
+            gameInterface.gameMessageLog.push(lastMessage);
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null, null);
+            const errorMessage: string = "ruh roh!";
+            const errorResult: Result<string> = {
+                ok: true,
+            }
+            const bangOnStub = sinon.stub(game, "resolveBangOn").returns(errorResult);
+
+            const result: Result<string> = game.processClaim(gameId, nextPlayerId, currentClaim, gamePopulation);
+            result.ok.should.be.true;
+            expect(bangOnStub.calledOnce).to.be.true;
+        });
         it("processClaim fails if resolve claim fails", () => {
             const gameId: string = "gameId";
             const playerId: string = "playerId";
@@ -1218,12 +1341,14 @@ describe("game functionality", () => {
             const currentClaim: Claim = {
                 quantity: 1,
                 value: 1,
-                cheat: false
+                cheat: false,
+                bangOn: false
             }
             const expectedClaim: Claim = {
                 quantity: 1,
                 value: 1,
                 cheat: false,
+                bangOn: false,
                 nextPlayerId: nextPlayerId,
                 playerId: playerId
             }
@@ -1278,12 +1403,14 @@ describe("game functionality", () => {
             const currentClaim: Claim = {
                 quantity: 1,
                 value: 1,
-                cheat: false
+                cheat: false,
+                bangOn: false
             }
             const expectedClaim: Claim = {
                 quantity: 1,
                 value: 1,
                 cheat: false,
+                bangOn: false,
                 nextPlayerId: nextPlayerId,
                 playerId: playerId
             }
@@ -1333,6 +1460,7 @@ describe("game functionality", () => {
                 quantity: 2,
                 value: 2,
                 cheat: false,
+                bangOn: false,
                 playerId: playerId,
                 nextPlayerId: nextPlayerId
             }
@@ -1375,6 +1503,7 @@ describe("game functionality", () => {
                 quantity: 2,
                 value: 2,
                 cheat: false,
+                bangOn: false,
                 playerId: playerId,
                 nextPlayerId: nextPlayerId
             }
@@ -1417,6 +1546,7 @@ describe("game functionality", () => {
                 quantity: 2,
                 value: 2,
                 cheat: false,
+                bangOn: false,
                 playerId: playerId,
                 nextPlayerId: nextPlayerId
             }
@@ -1459,6 +1589,7 @@ describe("game functionality", () => {
                 quantity: 2,
                 value: 2,
                 cheat: false,
+                bangOn: false,
                 playerId: playerId,
                 nextPlayerId: nextPlayerId
             }
@@ -1501,6 +1632,7 @@ describe("game functionality", () => {
                 quantity: 2,
                 value: 2,
                 cheat: false,
+                bangOn: false,
                 playerId: playerId,
                 nextPlayerId: nextPlayerId
             }
@@ -1543,6 +1675,7 @@ describe("game functionality", () => {
                 quantity: 2,
                 value: 2,
                 cheat: false,
+                bangOn: false,
                 playerId: playerId,
                 nextPlayerId: nextPlayerId
             }
@@ -1585,6 +1718,7 @@ describe("game functionality", () => {
                 quantity: 2,
                 value: 2,
                 cheat: false,
+                bangOn: false,
                 playerId: playerId,
                 nextPlayerId: nextPlayerId
             }
@@ -1602,7 +1736,7 @@ describe("game functionality", () => {
                 callingPlayer: nextPlayer,
                 calledPlayer: player,
                 claim: lastClaim,
-                cheatSuccess: true,
+                claimSuccess: false,
                 playerEliminated: false
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
@@ -1644,6 +1778,7 @@ describe("game functionality", () => {
                 quantity: 2,
                 value: 2,
                 cheat: false,
+                bangOn: false,
                 playerId: playerId,
                 nextPlayerId: nextPlayerId
             }
@@ -1661,7 +1796,7 @@ describe("game functionality", () => {
                 callingPlayer: nextPlayer,
                 calledPlayer: player,
                 claim: lastClaim,
-                cheatSuccess: false,
+                claimSuccess: true,
                 playerEliminated: false
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
@@ -1703,6 +1838,7 @@ describe("game functionality", () => {
                 quantity: 2,
                 value: 2,
                 cheat: false,
+                bangOn: false,
                 playerId: playerId,
                 nextPlayerId: nextPlayerId
             }
@@ -1720,7 +1856,7 @@ describe("game functionality", () => {
                 callingPlayer: nextPlayer,
                 calledPlayer: player,
                 claim: lastClaim,
-                cheatSuccess: false,
+                claimSuccess: true,
                 playerEliminated: false
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
@@ -1762,6 +1898,7 @@ describe("game functionality", () => {
                 quantity: 2,
                 value: 2,
                 cheat: false,
+                bangOn: false,
                 playerId: playerId,
                 nextPlayerId: nextPlayerId
             }
@@ -1779,7 +1916,7 @@ describe("game functionality", () => {
                 callingPlayer: nextPlayer,
                 calledPlayer: player,
                 claim: lastClaim,
-                cheatSuccess: true,
+                claimSuccess: false,
                 playerEliminated: true
             }
             const expectedGameOverResults: GameOver = {
@@ -1827,6 +1964,7 @@ describe("game functionality", () => {
                 quantity: 2,
                 value: 1,
                 cheat: false,
+                bangOn: false,
                 playerId: playerId,
                 nextPlayerId: nextPlayerId
             }
@@ -1844,7 +1982,7 @@ describe("game functionality", () => {
                 callingPlayer: nextPlayer,
                 calledPlayer: player,
                 claim: lastClaim,
-                cheatSuccess: false,
+                claimSuccess: true,
                 playerEliminated: true
             }
             const expectedGameOverResults: GameOver = {
@@ -1865,6 +2003,578 @@ describe("game functionality", () => {
             assert.equal(JSON.stringify(actualRoundResult), JSON.stringify(expectedRoundResults));
             assert.equal(player.numberOfDice, 5);
             assert.equal(nextPlayer.numberOfDice, 0);
+            const actualGameOverResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(1).args[2];
+            assert.equal(JSON.stringify(actualGameOverResult), JSON.stringify(expectedGameOverResults));
+            expect(startRoundStub.notCalled).to.be.true;
+            expect(existingGame.finished).to.be.true;
+        });
+    });
+    describe ("resolveBangOn tests", () => {
+        it("resolveBangOn fails if no gameId", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveBangOn(null, playerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGameIDProvided);
+        });
+        it("resolveBangOn fails if no playerId", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveBangOn(gameId, null, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoUserIDProvided);
+        });
+        it("resolveBangOn fails if no lastMessage", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveBangOn(gameId, playerId, null, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoClaimProvided);
+        });
+        it("resolveBangOn fails if no existingGame", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveBangOn(gameId, playerId, lastMessage, null, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.GameNotFound);
+        });
+        it("resolveBangOn fails if no gamePopulation", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveBangOn(gameId, playerId, lastMessage, existingGame, null);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
+        });
+        it("resolveBangOn fails if last message isn't a claim", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 3,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 3,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.RoundStarted,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const game = new Game(null, null);
+
+            const result: Result<string> = game.resolveBangOn(gameId, playerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.CanOnlyCheatClaim);
+        });
+        it("resolveBangOn succeeds if player was bang on", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 5,
+                roll: [2,3,3,4,5],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 5,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 3,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const expectedRoundResults: RoundResults = {
+                callingPlayer: nextPlayer,
+                calledPlayer: player,
+                claim: lastClaim,
+                claimSuccess: false,
+                playerEliminated: false
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game = new Game(null, messengerStub);
+            const startRoundSuccess = {ok: true};
+            const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
+
+            const result: Result<string> = game.resolveBangOn(gameId, nextPlayerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.true;
+            expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
+            const actualRoundResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(0).args[2];
+            assert.equal(JSON.stringify(actualRoundResult), JSON.stringify(expectedRoundResults));
+            assert.equal(player.numberOfDice, 3);
+            assert.equal(nextPlayer.numberOfDice, 5);
+            expect(startRoundStub.calledOnce).to.be.true;
+        });
+        it("resolveBangOn fails if player wasn't bang on", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 5,
+                roll: [2,2,3,4,5],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 5,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 3,
+                value: 5,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const expectedRoundResults: RoundResults = {
+                callingPlayer: nextPlayer,
+                calledPlayer: player,
+                claim: lastClaim,
+                claimSuccess: true,
+                playerEliminated: false
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game = new Game(null, messengerStub);
+            const startRoundSuccess = {ok: true};
+            const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
+
+            const result: Result<string> = game.resolveBangOn(gameId, nextPlayerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.true;
+            expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
+            const actualRoundResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(0).args[2];
+            assert.equal(JSON.stringify(actualRoundResult), JSON.stringify(expectedRoundResults));
+            assert.equal(player.numberOfDice, 5);
+            assert.equal(nextPlayer.numberOfDice, 3);
+            expect(startRoundStub.calledOnce).to.be.true;
+        });
+        it("resolveBangOn fails if startRound fails", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 5,
+                roll: [2,2,3,4,5],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 5,
+                roll: [2,2,2,2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 2,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const expectedRoundResults: RoundResults = {
+                callingPlayer: nextPlayer,
+                calledPlayer: player,
+                claim: lastClaim,
+                claimSuccess: false,
+                playerEliminated: false
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game = new Game(null, messengerStub);
+            const startRoundSuccess = {ok: false};
+            const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
+
+            const result: Result<string> = game.resolveBangOn(gameId, nextPlayerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.false;
+            expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
+            const actualRoundResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(0).args[2];
+            assert.equal(JSON.stringify(actualRoundResult), JSON.stringify(expectedRoundResults));
+            assert.equal(player.numberOfDice, 3);
+            assert.equal(nextPlayer.numberOfDice, 5);
+            expect(startRoundStub.calledOnce).to.be.true;
+        });
+        it("resolveBangOn will eliminate the person who was bang on", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 1,
+                roll: [1, 1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 5,
+                roll: [2,2],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 1,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const expectedRoundResults: RoundResults = {
+                callingPlayer: nextPlayer,
+                calledPlayer: player,
+                claim: lastClaim,
+                claimSuccess: false,
+                playerEliminated: true
+            }
+            const expectedGameOverResults: GameOver = {
+                winner: nextPlayer
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game = new Game(null, messengerStub);
+            const startRoundSuccess = {ok: true};
+            const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
+
+            const result: Result<string> = game.resolveBangOn(gameId, nextPlayerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.true;
+            expect(messengerStub.sendGameMessageToAll.calledTwice).to.be.true;
+            const actualRoundResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(0).args[2];
+            assert.equal(JSON.stringify(actualRoundResult), JSON.stringify(expectedRoundResults));
+            assert.equal(player.numberOfDice, -1);
+            assert.equal(nextPlayer.numberOfDice, 5);
+            const actualGameOverResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(1).args[2];
+            assert.equal(JSON.stringify(actualGameOverResult), JSON.stringify(expectedGameOverResults));
+            expect(startRoundStub.notCalled).to.be.true;
+            expect(existingGame.finished).to.be.true;
+        });
+        it("resolveBangOn will eliminate the bang on claimer", () => {
+            const gameId: string = "gameId";
+            const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
+            const player: Participant = {
+                userId: playerId,
+                name: "current name",
+                numberOfDice: 5,
+                roll: [1,1,1,1,1],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
+                name: "next name",
+                numberOfDice: 1,
+                roll: [5, 3],
+                eliminated: false
+            }
+            const lastClaim: Claim = {
+                quantity: 2,
+                value: 1,
+                cheat: false,
+                bangOn: false,
+                playerId: playerId,
+                nextPlayerId: nextPlayerId
+            }
+            const lastMessage: GameMessage = {
+                messageType: MessageType.Claim,
+                message: lastClaim
+            };
+            const existingGame : GameInterface = {
+                participants: [player, nextPlayer],
+                started: true,
+                finished: false,
+                gameMessageLog: []
+            }
+            const expectedRoundResults: RoundResults = {
+                callingPlayer: nextPlayer,
+                calledPlayer: player,
+                claim: lastClaim,
+                claimSuccess: true,
+                playerEliminated: true
+            }
+            const expectedGameOverResults: GameOver = {
+                winner: player
+            }
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game = new Game(null, messengerStub);
+            const startRoundSuccess = {ok: true};
+            const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
+
+            const result: Result<string> = game.resolveBangOn(gameId, nextPlayerId, lastMessage, existingGame, gamePopulation);
+            result.ok.should.be.true;
+            expect(messengerStub.sendGameMessageToAll.calledTwice).to.be.true;
+            const actualRoundResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(0).args[2];
+            assert.equal(JSON.stringify(actualRoundResult), JSON.stringify(expectedRoundResults));
+            assert.equal(player.numberOfDice, 5);
+            assert.equal(nextPlayer.numberOfDice, -1);
             const actualGameOverResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(1).args[2];
             assert.equal(JSON.stringify(actualGameOverResult), JSON.stringify(expectedGameOverResults));
             expect(startRoundStub.notCalled).to.be.true;
