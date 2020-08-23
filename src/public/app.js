@@ -16,10 +16,11 @@
     messages.scrollTop = messages.scrollHeight;
   }
 
-  function handleResponse(response) {
+  async function handleResponse(response) {
+    let res = await response.json().then((data) => JSON.stringify(data, null, 2));
     return response.ok
-      ? response.json().then((data) => JSON.stringify(data, null, 2))
-      : Promise.reject(new Error('Unexpected response'));
+      ? res
+      : Promise.reject(new Error(res));
   }
 
   login.onclick = function () {

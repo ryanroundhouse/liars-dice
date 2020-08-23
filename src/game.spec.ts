@@ -8,7 +8,7 @@ import { Messenger } from "./messenger";
 import { Result } from "./types/result";
 import { GameInterface } from "./interfaces/game-interface";
 import { Participant } from "./interfaces/participant";
-import winston from "winston";
+import winston, { log } from "winston";
 import WebSocket from "ws";
 import { ErrorMessage } from "./enums/errorMessage";
 import { GameMessage } from "./interfaces/game-message";
@@ -695,7 +695,7 @@ describe("game functionality", () => {
             const currentClaim: GameMessage = {
                 messageType: MessageType.Claim,
                 message: ""
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const game = new Game(null, null);
 
@@ -709,7 +709,7 @@ describe("game functionality", () => {
             const currentClaim: GameMessage = {
                 messageType: MessageType.Claim,
                 message: ""
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const game = new Game(null, null);
 
@@ -723,7 +723,7 @@ describe("game functionality", () => {
             const currentClaim: GameMessage = {
                 messageType: MessageType.Claim,
                 message: ""
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const player: Participant = {
                 userId: "userId",
@@ -751,7 +751,7 @@ describe("game functionality", () => {
             const currentClaim: GameMessage = {
                 messageType: MessageType.Claim,
                 message: ""
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const player: Participant = {
                 userId: "userId",
@@ -779,7 +779,7 @@ describe("game functionality", () => {
             const currentClaim: GameMessage = {
                 messageType: MessageType.Claim,
                 message: ""
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const game = new Game(null, null);
 
@@ -793,7 +793,7 @@ describe("game functionality", () => {
             const currentClaim: GameMessage = {
                 messageType: MessageType.Claim,
                 message: ""
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const game = new Game(null, null);
 
@@ -807,7 +807,7 @@ describe("game functionality", () => {
             const currentClaim: GameMessage = {
                 messageType: MessageType.Claim,
                 message: ""
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const player: Participant = {
                 userId: playerId,
@@ -842,7 +842,7 @@ describe("game functionality", () => {
                 message: {
                     quantity: 2
                 }
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const player: Participant = {
                 userId: playerId,
@@ -880,7 +880,7 @@ describe("game functionality", () => {
                 message: {
                     quantity: 2
                 }
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const player: Participant = {
                 userId: playerId,
@@ -920,7 +920,7 @@ describe("game functionality", () => {
                 message: {
                     cheat: true
                 }
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const player: Participant = {
                 userId: playerId,
@@ -985,7 +985,7 @@ describe("game functionality", () => {
             const currentClaim: GameMessage = {
                 messageType: MessageType.Claim,
                 message: currentClaimMessage
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameInterface: GameInterface = {
                 started: true,
@@ -998,8 +998,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1028,7 +1028,7 @@ describe("game functionality", () => {
                 message: {
                     cheat: true
                 }
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const player: Participant = {
                 userId: playerId,
@@ -1093,7 +1093,7 @@ describe("game functionality", () => {
             const currentClaim: GameMessage = {
                 messageType: MessageType.Claim,
                 message: currentClaimMessage
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameInterface: GameInterface = {
                 started: true,
@@ -1106,8 +1106,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1134,7 +1134,7 @@ describe("game functionality", () => {
                 message: {
                     cheat: false
                 }
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const player: Participant = {
                 userId: playerId,
@@ -1180,7 +1180,7 @@ describe("game functionality", () => {
                 message: {
                     cheat: false
                 }
-            };            
+            };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const player: Participant = {
                 userId: playerId,
@@ -1349,8 +1349,8 @@ describe("game functionality", () => {
                 value: 1,
                 cheat: false,
                 bangOn: false,
-                nextPlayerId: nextPlayerId,
-                playerId: playerId
+                nextPlayerId,
+                playerId
             }
             const currentClaimMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1411,8 +1411,8 @@ describe("game functionality", () => {
                 value: 1,
                 cheat: false,
                 bangOn: false,
-                nextPlayerId: nextPlayerId,
-                playerId: playerId
+                nextPlayerId,
+                playerId
             }
             const currentClaimMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1461,8 +1461,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1504,8 +1504,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1547,8 +1547,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1590,8 +1590,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1633,8 +1633,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1676,8 +1676,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.RoundStarted,
@@ -1719,8 +1719,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1779,8 +1779,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1839,8 +1839,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1899,8 +1899,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -1965,8 +1965,8 @@ describe("game functionality", () => {
                 value: 1,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -2033,8 +2033,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -2076,8 +2076,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -2119,8 +2119,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -2162,8 +2162,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -2205,8 +2205,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -2248,8 +2248,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.RoundStarted,
@@ -2291,8 +2291,8 @@ describe("game functionality", () => {
                 value: 3,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -2351,8 +2351,8 @@ describe("game functionality", () => {
                 value: 5,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -2411,8 +2411,8 @@ describe("game functionality", () => {
                 value: 2,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -2471,8 +2471,8 @@ describe("game functionality", () => {
                 value: 1,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,
@@ -2537,8 +2537,8 @@ describe("game functionality", () => {
                 value: 1,
                 cheat: false,
                 bangOn: false,
-                playerId: playerId,
-                nextPlayerId: nextPlayerId
+                playerId,
+                nextPlayerId
             }
             const lastMessage: GameMessage = {
                 messageType: MessageType.Claim,

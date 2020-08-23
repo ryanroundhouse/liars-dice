@@ -16,15 +16,11 @@ import { MessageType } from "./enums/messageType";
 import { RoundResults } from "./interfaces/round-results";
 import { Claim } from "./interfaces/claim";
 import sinon from "sinon";
+import logger from './logger';
+
+logger.silent = true;
 
 chai.should();
-
-// create logger
-const logger = winston.createLogger({
-    transports: [
-      new winston.transports.Console({ silent: true }),
-    ],
-});
 
 describe ("messenger tests", () => {
     describe ("sendGameMessageToOne tests", () => {

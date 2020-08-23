@@ -15,7 +15,7 @@ const game: Game = new Game(logger, messenger);
 export function createGame(req: Request, res: Response){
     const userId: string = req.session.userId;
     if (userId === undefined){
-        res.status(400).send({ result: '400', message: 'user must log in before creating a game.' });
+        res.status(400).send({message: 'user must log in before creating a game.'});
         logger.log('info', `user tried to create a game before logging in.`);
         return;
     }
