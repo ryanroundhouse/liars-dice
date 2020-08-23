@@ -1,4 +1,4 @@
-name: Latest blog post workflow
+name: Build and push docker
 on: [push]
 jobs:
   build-and-push-docker:
