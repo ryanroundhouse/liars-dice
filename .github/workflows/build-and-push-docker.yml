@@ -7,7 +7,7 @@ jobs:
     steps:
         - uses: actions/checkout@v1.0
         - uses: mr-smithers-excellent/docker-build-push@v4
-            with:
+          with:
                 image: ryanroundhouse/liar
                 registry: docker.io
                 username: ${{ secrets.DOCKER_USERNAME }}
