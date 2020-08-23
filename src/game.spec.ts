@@ -8,7 +8,6 @@ import { Messenger } from "./messenger";
 import { Result } from "./types/result";
 import { GameInterface } from "./interfaces/game-interface";
 import { Participant } from "./interfaces/participant";
-import winston, { log } from "winston";
 import WebSocket from "ws";
 import { ErrorMessage } from "./enums/errorMessage";
 import { GameMessage } from "./interfaces/game-message";
@@ -17,26 +16,22 @@ import { RoundResults } from "./interfaces/round-results";
 import { Claim } from "./interfaces/claim";
 import sinon from "sinon";
 import { GameOver } from "./interfaces/game-over";
+import logger from './logger';
+
+logger.silent = true;
 
 chai.should();
-
-// create logger
-const logger = winston.createLogger({
-    transports: [
-      new winston.transports.Console({ silent: true }),
-    ],
-  });
 
 describe("game functionality", () => {
     describe("create game functionality", () => {
         it("can't create game if you don't provide a userID", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<string> = game.createGame(null, new Map<string, GameInterface>());
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoUserIDProvided);
         });
         it("can't create game if you don't provide a gamePopulation", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<string> = game.createGame("100", null);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
@@ -50,7 +45,7 @@ describe("game functionality", () => {
                 roll: [],
                 eliminated: false
             }
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameWithPlayer: GameInterface = {
                 started: false,
@@ -65,7 +60,7 @@ describe("game functionality", () => {
         });
         it("can create game if you're not in a game", () => {
             const playerId: string = "test";
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const result: Result<string> = game.createGame(playerId, gamePopulation);
             result.ok.should.be.true;
@@ -79,7 +74,7 @@ describe("game functionality", () => {
                 roll: [],
                 eliminated: false
             }
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameWithPlayer: GameInterface = {
                 started: true,
@@ -101,7 +96,7 @@ describe("game functionality", () => {
                 roll: [],
                 eliminated: false
             }
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameWithPlayer: GameInterface = {
                 started: true,
@@ -117,31 +112,31 @@ describe("game functionality", () => {
 
     describe("join game functionality", () => {
         it("can't join game if you don't provide a userID", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<Participant[]> = game.joinGame(null, "gameId", "name", new Map<string, GameInterface>());
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoUserIDProvided);
         });
         it("can't join game if you don't provide a gameID", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<Participant[]> = game.joinGame("userId", null, "name", new Map<string, GameInterface>());
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGameIDProvided);
         });
         it("can't join game if you don't provide a name", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<Participant[]> = game.joinGame("userId", "gameId", null, new Map<string, GameInterface>());
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoNameProvided);
         });
         it("can't join game if you don't provide a gamePopulation", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<Participant[]> = game.joinGame("userId", "gameId", "name", null);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
         });
         it("can't join game if it doesn't exist", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<Participant[]> = game.joinGame("userId", "gameId", "name", new Map<string, GameInterface>());
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.GameNotFound);
@@ -155,7 +150,7 @@ describe("game functionality", () => {
                 roll: [],
                 eliminated: false
             }
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameWithPlayer: GameInterface = {
                 started: false,
@@ -173,7 +168,7 @@ describe("game functionality", () => {
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
 
-            const game: Game = new Game(logger, messengerStub);
+            const game: Game = new Game(messengerStub);
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const emptyGame: GameInterface = {
                 started: false,
@@ -198,7 +193,7 @@ describe("game functionality", () => {
                 roll: [],
                 eliminated: false
             }
-            const game: Game = new Game(logger, messengerStub);
+            const game: Game = new Game(messengerStub);
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameWithPlayer: GameInterface = {
                 started: true,
@@ -223,7 +218,7 @@ describe("game functionality", () => {
                 roll: [],
                 eliminated: false
             }
-            const game: Game = new Game(logger, messengerStub);
+            const game: Game = new Game(messengerStub);
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameWithPlayer: GameInterface = {
                 started: false,
@@ -248,7 +243,7 @@ describe("game functionality", () => {
                 roll: [],
                 eliminated: true
             }
-            const game: Game = new Game(logger, messengerStub);
+            const game: Game = new Game(messengerStub);
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameWithPlayer: GameInterface = {
                 started: true,
@@ -264,25 +259,25 @@ describe("game functionality", () => {
     });
     describe("start game functionality", () => {
         it("can't start game if you don't provide a userID", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<string> = game.startGame(null, "gameId", new Map<string, GameInterface>());
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoUserIDProvided);
         });
         it("can't start game if you don't provide a gameID", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<string> = game.startGame("userId", null, new Map<string, GameInterface>());
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGameIDProvided);
         });
         it("can't start game if you don't provide a gamePopulation", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<string> = game.startGame("userId", "gameId", null);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
         });
         it("can't start game if it doesn't exist", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<string> = game.startGame("userId", "gameId", new Map<string, GameInterface>());
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.GameNotFound);
@@ -296,7 +291,7 @@ describe("game functionality", () => {
                 roll: [],
                 eliminated: true
             }
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameWithPlayer: GameInterface = {
                 started: true,
@@ -318,7 +313,7 @@ describe("game functionality", () => {
                 roll: [],
                 eliminated: true
             }
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameWithPlayer: GameInterface = {
                 started: false,
@@ -340,7 +335,7 @@ describe("game functionality", () => {
                 roll: [],
                 eliminated: true
             }
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameWithPlayer: GameInterface = {
                 started: false,
@@ -373,7 +368,7 @@ describe("game functionality", () => {
                 roll: [],
                 eliminated: false
             }
-            const game: Game = new Game(logger, messengerStub);
+            const game: Game = new Game(messengerStub);
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const gameWithPlayer: GameInterface = {
                 started: false,
@@ -390,19 +385,19 @@ describe("game functionality", () => {
     });
     describe("start Round tests", () => {
         it("can't start round if you don't provide a gameId", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<string> = game.startRound(null, new Map<string, GameInterface>());
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGameIDProvided);
         });
         it("can't start round if you don't provide a gamePopulation", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<string> = game.startRound("gameId", null);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
         });
         it("can't start round if game doesn't exist", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<string> = game.startRound("gameId", new Map<string, GameInterface>());
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.GameNotFound);
@@ -410,13 +405,13 @@ describe("game functionality", () => {
     });
     describe("calculateStartingPlayer tests", () => {
         it("can't calculate starting player if no game provided.", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const result: Result<Participant> = game.calculateStartingPlayer(null);
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.NoGameSpecified);
         });
         it("can't calculate starting player if no game messages found.", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const gameInterface: GameInterface = {
                 participants: [],
                 started: false,
@@ -428,7 +423,7 @@ describe("game functionality", () => {
             result.message.should.equal(ErrorMessage.NoGameMessagesFound);
         });
         it("can't calculate starting player if game not started.", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const message: GameMessage = {
                 messageType: MessageType.GameStarted,
                 message: "game started"
@@ -444,7 +439,7 @@ describe("game functionality", () => {
             result.message.should.equal(ErrorMessage.GameNotStarted);
         });
         it("can't calculate starting player if game already finished.", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const message: GameMessage = {
                 messageType: MessageType.GameStarted,
                 message: "game started"
@@ -460,7 +455,7 @@ describe("game functionality", () => {
             result.message.should.equal(ErrorMessage.GameAlreadyFinished);
         });
         it("can calculate starting player if at start of game.", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const firstPlayerId: string = "guid1";
             const secondPlayerId: string = "guid2";
             const firstParticipant: Participant = {
@@ -492,7 +487,7 @@ describe("game functionality", () => {
             expect([firstParticipant, secondParticipant]).to.include(result.value);
         });
         it("can calculate starting player if someone messes up.", () => {
-            const game: Game = new Game(logger, new Messenger());
+            const game: Game = new Game(new Messenger());
             const firstPlayerId: string = "guid1";
             const secondPlayerId: string = "guid2";
             const firstParticipant: Participant = {
@@ -550,7 +545,7 @@ describe("game functionality", () => {
             const messageType: MessageType = MessageType.GameStarted;
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(null, startingPlayer, messageType, gamePopulation);
             result.ok.should.be.false;
@@ -568,7 +563,7 @@ describe("game functionality", () => {
             const messageType: MessageType = MessageType.GameStarted;
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(gameId, null, messageType, gamePopulation);
             result.ok.should.be.false;
@@ -586,7 +581,7 @@ describe("game functionality", () => {
             const messageType: MessageType = MessageType.GameStarted;
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(gameId, startingPlayer, null, gamePopulation);
             result.ok.should.be.false;
@@ -604,7 +599,7 @@ describe("game functionality", () => {
             const messageType: MessageType = MessageType.GameStarted;
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const wsConnections: Map<string, WebSocket> = new Map<string, WebSocket>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(gameId, startingPlayer, messageType, null);
             result.ok.should.be.false;
@@ -628,7 +623,7 @@ describe("game functionality", () => {
                 participants: [startingPlayer]
             }
             gamePopulation.set(gameId, gameInterface);
-            const game = new Game(null, new Messenger());
+            const game = new Game(new Messenger());
 
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(gameId, startingPlayer, messageType, gamePopulation);
             result.ok.should.be.false;
@@ -670,7 +665,7 @@ describe("game functionality", () => {
             wsConnections.set(nextPlayer.userId, nextWebSocket);
             tempMessenger.wsConnections = wsConnections;
 
-            const game = new Game(null, tempMessenger);
+            const game = new Game(tempMessenger);
             const result: Result<string> = game.generateDiceAndNotifyGameMessage(gameId, startingPlayer, messageType, gamePopulation);
             result.ok.should.be.true;
 
@@ -697,7 +692,7 @@ describe("game functionality", () => {
                 message: ""
             };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.processClaim(null, playerId, currentClaim, gamePopulation);
             result.ok.should.be.false;
@@ -711,7 +706,7 @@ describe("game functionality", () => {
                 message: ""
             };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
             result.ok.should.be.false;
@@ -739,7 +734,7 @@ describe("game functionality", () => {
                 participants: [player]
             }
             gamePopulation.set(gameId, gameInterface);
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
             result.ok.should.be.false;
@@ -767,7 +762,7 @@ describe("game functionality", () => {
                 participants: [player]
             }
             gamePopulation.set(gameId, gameInterface);
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.processClaim(gameId, null, currentClaim, gamePopulation);
             result.ok.should.be.false;
@@ -781,7 +776,7 @@ describe("game functionality", () => {
                 message: ""
             };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.processClaim(gameId, playerId, null, gamePopulation);
             result.ok.should.be.false;
@@ -795,7 +790,7 @@ describe("game functionality", () => {
                 message: ""
             };
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, null);
             result.ok.should.be.false;
@@ -828,7 +823,7 @@ describe("game functionality", () => {
             }
             gameInterface.gameMessageLog.push(lastMessage);
             gamePopulation.set(gameId, gameInterface);
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
             result.ok.should.be.false;
@@ -866,7 +861,7 @@ describe("game functionality", () => {
             }
             gameInterface.gameMessageLog.push(lastMessage);
             gamePopulation.set(gameId, gameInterface);
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
             result.ok.should.be.false;
@@ -906,7 +901,7 @@ describe("game functionality", () => {
             }
             gameInterface.gameMessageLog.push(lastMessage);
             gamePopulation.set(gameId, gameInterface);
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.processClaim(gameId, playerId, currentClaim, gamePopulation);
             result.ok.should.be.false;
@@ -946,7 +941,7 @@ describe("game functionality", () => {
             }
             gameInterface.gameMessageLog.push(lastMessage);
             gamePopulation.set(gameId, gameInterface);
-            const game = new Game(null, null);
+            const game = new Game(null);
             const errorMessage: string = "ruh roh!";
             const errorResult: Result<string> = {
                 ok: false,
@@ -1007,7 +1002,7 @@ describe("game functionality", () => {
             }
             gameInterface.gameMessageLog.push(lastMessage);
             gamePopulation.set(gameId, gameInterface);
-            const game = new Game(null, null);
+            const game = new Game(null);
             const errorMessage: string = "ruh roh!";
             const errorResult: Result<string> = {
                 ok: false,
@@ -1054,7 +1049,7 @@ describe("game functionality", () => {
             }
             gameInterface.gameMessageLog.push(lastMessage);
             gamePopulation.set(gameId, gameInterface);
-            const game = new Game(null, null);
+            const game = new Game(null);
             const successMessage: string = "oh yeah!";
             const successResult: Result<string> = {
                 ok: true,
@@ -1115,7 +1110,7 @@ describe("game functionality", () => {
             }
             gameInterface.gameMessageLog.push(lastMessage);
             gamePopulation.set(gameId, gameInterface);
-            const game = new Game(null, null);
+            const game = new Game(null);
             const errorMessage: string = "ruh roh!";
             const errorResult: Result<string> = {
                 ok: true,
@@ -1160,7 +1155,7 @@ describe("game functionality", () => {
             }
             gameInterface.gameMessageLog.push(lastMessage);
             gamePopulation.set(gameId, gameInterface);
-            const game = new Game(null, null);
+            const game = new Game(null);
             const errorMessage: string = "ruh roh!";
             const errorResult: Result<string> = {
                 ok: false,
@@ -1206,7 +1201,7 @@ describe("game functionality", () => {
             }
             gameInterface.gameMessageLog.push(lastMessage);
             gamePopulation.set(gameId, gameInterface);
-            const game = new Game(null, null);
+            const game = new Game(null);
             const successMessage: string = "oh yeah!";
             const successResult: Result<string> = {
                 ok: true,
@@ -1234,7 +1229,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveClaim(null, playerId, currentClaim, existingGame, gamePopulation);
             result.ok.should.be.false;
@@ -1254,7 +1249,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveClaim(gameId, null, currentClaim, existingGame, gamePopulation);
             result.ok.should.be.false;
@@ -1274,7 +1269,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveClaim(gameId, playerId, null, existingGame, gamePopulation);
             result.ok.should.be.false;
@@ -1294,7 +1289,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveClaim(gameId, playerId, currentClaim, null, gamePopulation);
             result.ok.should.be.false;
@@ -1314,7 +1309,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveClaim(gameId, playerId, currentClaim, existingGame, null);
             result.ok.should.be.false;
@@ -1366,7 +1361,7 @@ describe("game functionality", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
-            const game = new Game(null, messenger);
+            const game = new Game(messenger);
 
             const result: Result<string> = game.resolveClaim(gameId, playerId, currentClaimMessage, existingGame, gamePopulation);
             result.ok.should.be.true;
@@ -1428,7 +1423,7 @@ describe("game functionality", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
-            const game = new Game(null, messenger);
+            const game = new Game(messenger);
 
             const result: Result<string> = game.resolveClaim(gameId, playerId, currentClaimMessage, existingGame, gamePopulation);
             result.ok.should.be.true;
@@ -1475,7 +1470,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveCheat(null, playerId, lastMessage, existingGame, gamePopulation);
             result.ok.should.be.false;
@@ -1518,7 +1513,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveCheat(gameId, null, lastMessage, existingGame, gamePopulation);
             result.ok.should.be.false;
@@ -1561,7 +1556,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveCheat(gameId, playerId, null, existingGame, gamePopulation);
             result.ok.should.be.false;
@@ -1604,7 +1599,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveCheat(gameId, playerId, lastMessage, null, gamePopulation);
             result.ok.should.be.false;
@@ -1647,7 +1642,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveCheat(gameId, playerId, lastMessage, existingGame, null);
             result.ok.should.be.false;
@@ -1690,7 +1685,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveCheat(gameId, playerId, lastMessage, existingGame, gamePopulation);
             result.ok.should.be.false;
@@ -1743,7 +1738,7 @@ describe("game functionality", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
-            const game = new Game(null, messengerStub);
+            const game = new Game(messengerStub);
             const startRoundSuccess = {ok: true};
             const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
 
@@ -1803,7 +1798,7 @@ describe("game functionality", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
-            const game = new Game(null, messengerStub);
+            const game = new Game(messengerStub);
             const startRoundSuccess = {ok: true};
             const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
 
@@ -1863,7 +1858,7 @@ describe("game functionality", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
-            const game = new Game(null, messengerStub);
+            const game = new Game(messengerStub);
             const startRoundSuccess = {ok: false};
             const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
 
@@ -1926,7 +1921,7 @@ describe("game functionality", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
-            const game = new Game(null, messengerStub);
+            const game = new Game(messengerStub);
             const startRoundSuccess = {ok: true};
             const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
 
@@ -1992,7 +1987,7 @@ describe("game functionality", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
-            const game = new Game(null, messengerStub);
+            const game = new Game(messengerStub);
             const startRoundSuccess = {ok: true};
             const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
 
@@ -2047,7 +2042,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveBangOn(null, playerId, lastMessage, existingGame, gamePopulation);
             result.ok.should.be.false;
@@ -2090,7 +2085,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveBangOn(gameId, null, lastMessage, existingGame, gamePopulation);
             result.ok.should.be.false;
@@ -2133,7 +2128,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveBangOn(gameId, playerId, null, existingGame, gamePopulation);
             result.ok.should.be.false;
@@ -2176,7 +2171,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveBangOn(gameId, playerId, lastMessage, null, gamePopulation);
             result.ok.should.be.false;
@@ -2219,7 +2214,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveBangOn(gameId, playerId, lastMessage, existingGame, null);
             result.ok.should.be.false;
@@ -2262,7 +2257,7 @@ describe("game functionality", () => {
                 gameMessageLog: []
             }
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const game = new Game(null, null);
+            const game = new Game(null);
 
             const result: Result<string> = game.resolveBangOn(gameId, playerId, lastMessage, existingGame, gamePopulation);
             result.ok.should.be.false;
@@ -2315,7 +2310,7 @@ describe("game functionality", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
-            const game = new Game(null, messengerStub);
+            const game = new Game(messengerStub);
             const startRoundSuccess = {ok: true};
             const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
 
@@ -2375,7 +2370,7 @@ describe("game functionality", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
-            const game = new Game(null, messengerStub);
+            const game = new Game(messengerStub);
             const startRoundSuccess = {ok: true};
             const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
 
@@ -2435,7 +2430,7 @@ describe("game functionality", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
-            const game = new Game(null, messengerStub);
+            const game = new Game(messengerStub);
             const startRoundSuccess = {ok: false};
             const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
 
@@ -2498,7 +2493,7 @@ describe("game functionality", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
-            const game = new Game(null, messengerStub);
+            const game = new Game(messengerStub);
             const startRoundSuccess = {ok: true};
             const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
 
@@ -2564,7 +2559,7 @@ describe("game functionality", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
-            const game = new Game(null, messengerStub);
+            const game = new Game(messengerStub);
             const startRoundSuccess = {ok: true};
             const startRoundStub = sinon.stub(game, "startRound").returns(startRoundSuccess);
 

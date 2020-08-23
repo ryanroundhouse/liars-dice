@@ -11,12 +11,13 @@ import { ErrorMessage } from "./enums/errorMessage";
 import { Claim } from "./interfaces/claim";
 import { GameOver } from "./interfaces/game-over";
 import { Messenger } from "./messenger";
+import logger from "./logger";
 
 export class Game{
     static gamePopulation = new Map<string, GameInterface>();
 
     // need this to be the singleton messenger!
-    constructor(private logger: winston.Logger, private messenger: Messenger){}
+    constructor(private messenger: Messenger){}
 
     createGame(userId:string, gamePopulation: Map<string, GameInterface>): Result<string>{
         if (!userId){
@@ -36,9 +37,9 @@ export class Game{
         if (alreadyInGame){
             return {ok: false, message: ErrorMessage.CantCreateNewGameWhenInGame};
         }
-        this.logger?.log('info', `got game create from ${userId}`);
+        logger.log('info', `got game create from ${userId}`);
         const id = uuidv4();
-        this.logger?.log('info', `gameId is ${id}`);
+        logger.log('info', `gameId is ${id}`);
         const game: GameInterface = {
             started: false,
             finished: false,
@@ -78,7 +79,7 @@ export class Game{
         if (alreadyInGame){
             return {ok: false, message: ErrorMessage.CantJoinGameWhenInRunningGame };
         }
-        this.logger.debug(`${userId} is attempting to join game ${gameId}`);
+        logger.debug(`${userId} is attempting to join game ${gameId}`);
         const participant: Participant = {
             userId,
             name,
@@ -87,7 +88,7 @@ export class Game{
             eliminated: false
         };
         existingGame.participants.push(participant);
-        this.logger.debug(`${gameId}, ${MessageType.PlayerJoined}, ${existingGame.participants[existingGame.participants.length - 1]}, ${gamePopulation}`);
+        logger.debug(`${gameId}, ${MessageType.PlayerJoined}, ${existingGame.participants[existingGame.participants.length - 1]}, ${gamePopulation}`);
         const result = this.messenger.sendGameMessageToAll(gameId, MessageType.PlayerJoined, existingGame.participants[existingGame.participants.length - 1], gamePopulation);
         if (!result.ok){
             return result;
@@ -147,11 +148,11 @@ export class Game{
         // randomize starting player if start of game
         if (lastPlayEvent.messageType === MessageType.GameStarted){
             startingPlayer = game.participants[Game.getRandomInt(game.participants.length-1)];
-            this.logger?.info(`new game, rolling for starting player, got ${startingPlayer.userId}`);
+            logger.info(`new game, rolling for starting player, got ${startingPlayer.userId}`);
         }
         // whoever goofed up is the new starting player
         else if (lastPlayEvent.messageType === MessageType.RoundResults){
-            this.logger?.info(`checking lastPlayEvent: ${JSON.stringify(lastPlayEvent)}`);
+            logger.info(`checking lastPlayEvent: ${JSON.stringify(lastPlayEvent)}`);
             const roundResults = (lastPlayEvent.message as RoundResults);
             if (!roundResults.claimSuccess){
                 startingPlayer = roundResults.calledPlayer;
@@ -233,7 +234,7 @@ export class Game{
     }
 
     processClaim(gameId: string, playerId: string, currentClaim: GameMessage, gamePopulation: Map<string, GameInterface>): Result<string> {
-        this.logger?.log('info', `got request to make a claim ${JSON.stringify(currentClaim)} in ${gameId} from ${playerId}`);
+        logger.log('info', `got request to make a claim ${JSON.stringify(currentClaim)} in ${gameId} from ${playerId}`);
         if (!gameId){
             return {ok: false, message: ErrorMessage.NoGameIDProvided};
         }
@@ -249,25 +250,25 @@ export class Game{
         const existingGame = gamePopulation.get(gameId);
         // does the game exist?
         if (existingGame == null){
-            this.logger?.log('info', `${playerId} tried to start game ${gameId} that didn't exist.`);
+            logger.log('info', `${playerId} tried to start game ${gameId} that didn't exist.`);
             return {ok: false, message: ErrorMessage.GameNotFound};
         }
         // is the game not started
         if (!existingGame.started){
-            this.logger?.log('info', `${playerId} tried to make a claim in ${gameId} but it hasn't started yet.`);
+            logger.log('info', `${playerId} tried to make a claim in ${gameId} but it hasn't started yet.`);
             return {ok: false, message: ErrorMessage.GameNotStarted};
         }
         const lastMessage = existingGame.gameMessageLog[existingGame.gameMessageLog.length - 1];
-        this.logger?.debug(`lastMessage was ${JSON.stringify(lastMessage)}`);
+        logger.debug(`lastMessage was ${JSON.stringify(lastMessage)}`);
         // can't claim if it's not your turn
         if (lastMessage.messageType === MessageType.Claim){
-            this.logger?.debug(`comparing ${JSON.stringify(lastMessage)} to ${JSON.stringify(currentClaim)} by ${playerId}`);
+            logger.debug(`comparing ${JSON.stringify(lastMessage)} to ${JSON.stringify(currentClaim)} by ${playerId}`);
             if (lastMessage.message.nextPlayerId !== playerId){
-                this.logger?.log('info', `${playerId} tried to claim in ${gameId} when it's not their turn.`);
+                logger.log('info', `${playerId} tried to claim in ${gameId} when it's not their turn.`);
                 return {ok: false, message: ErrorMessage.NotYourTurn};
             }
             if (!((currentClaim.message as Claim).cheat || (currentClaim.message as Claim).bangOn) && (lastMessage.message as Claim).quantity >= currentClaim.message.quantity){
-                this.logger?.log('info', `${playerId} tried to claim smaller than last claim in ${gameId}.`);
+                logger.log('info', `${playerId} tried to claim smaller than last claim in ${gameId}.`);
                 return {ok: false, message: ErrorMessage.ClaimTooLow};
             }
         }
@@ -275,9 +276,9 @@ export class Game{
             // find the starting player's roundstarted.  It's not always the last one.
             const reverseGameMessageLog = existingGame.gameMessageLog.slice().reverse();
             const startingPlayerMessage = reverseGameMessageLog.find(gameMessage => gameMessage.messageType === MessageType.RoundStarted && (gameMessage.message as RoundSetup).startingPlayer);
-            this.logger?.debug(`found startingPlayer from: ${JSON.stringify(startingPlayerMessage)}`);
+            logger.debug(`found startingPlayer from: ${JSON.stringify(startingPlayerMessage)}`);
             if ((startingPlayerMessage.message as RoundSetup).participant.userId !== playerId){
-                this.logger?.log('info', `${playerId} tried to claim in ${gameId} when it's not their turn!`);
+                logger.log('info', `${playerId} tried to claim in ${gameId} when it's not their turn!`);
                 return {ok: false, message: ErrorMessage.NotYourTurn};
             }
         }
@@ -322,9 +323,9 @@ export class Game{
             return {ok: false, message: ErrorMessage.NoGamePopulationProvided};
         }
         const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
-        this.logger?.debug(`activePlayers: ${JSON.stringify(activePlayers)}`);
+        logger.debug(`activePlayers: ${JSON.stringify(activePlayers)}`);
         const currentPlayer = activePlayers.find(participant => participant.userId === playerId);
-        this.logger?.debug(`currentPlayer: ${JSON.stringify(currentPlayer)}`);
+        logger.debug(`currentPlayer: ${JSON.stringify(currentPlayer)}`);
         let nextPlayer: Participant;
         if (activePlayers.indexOf(currentPlayer) === activePlayers.length - 1){
             nextPlayer = activePlayers[0];
@@ -334,8 +335,8 @@ export class Game{
         }
         currentClaim.message.nextPlayerId = nextPlayer.userId;
         currentClaim.message.playerId = playerId;
-        this.logger?.verbose(`gamePopulation is now:`);
-        Game.gamePopulation.forEach((val, key) => this.logger?.verbose(`${key}: ${JSON.stringify(val)}`));
+        logger.verbose(`gamePopulation is now:`);
+        Game.gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
         const result = this.messenger.sendGameMessageToAll(gameId, MessageType.Claim, currentClaim.message, gamePopulation);
         return result;
     }
@@ -358,7 +359,7 @@ export class Game{
         }
         // can't call cheat with no claims
         if (lastMessage.messageType !== MessageType.Claim){
-            this.logger?.log('info', `${playerId} tried to call cheat in ${gameId} when there hasn't been a claim.`);
+            logger.log('info', `${playerId} tried to call cheat in ${gameId} when there hasn't been a claim.`);
             return {ok: false, message: ErrorMessage.CanOnlyCheatClaim};
         }
         const lastClaim = lastMessage.message as Claim;
@@ -366,7 +367,7 @@ export class Game{
         const numberOfThatRoll = Game.countNumberOfThatRoll(challengedPlayer.roll, lastClaim.value);
         let roundResults: RoundResults;
         if (lastClaim.quantity === numberOfThatRoll){
-            this.logger?.info('bang on call successful');
+            logger.info('bang on call successful');
             challengedPlayer.numberOfDice = challengedPlayer.numberOfDice - 2;
             if (challengedPlayer.numberOfDice <= 0){
                 challengedPlayer.eliminated = true;
@@ -380,7 +381,7 @@ export class Game{
             }
         }
         else{
-            this.logger?.info('bang on call unsuccessful');
+            logger.info('bang on call unsuccessful');
             const challenger = existingGame.participants.find(participant => participant.userId === playerId);
             challenger.numberOfDice = challenger.numberOfDice - 2;
             if (challenger.numberOfDice <= 0){
@@ -394,8 +395,8 @@ export class Game{
                 playerEliminated: challenger.eliminated
             }
         }
-        this.logger?.verbose(`gamePopulation is now:`);
-        Game.gamePopulation.forEach((val, key) => this.logger.verbose(`${key}: ${JSON.stringify(val)}`));
+        logger.verbose(`gamePopulation is now:`);
+        Game.gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
         this.messenger.sendGameMessageToAll(gameId, MessageType.RoundResults, roundResults, gamePopulation);
         const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
         if (activePlayers.length === 1){
@@ -432,7 +433,7 @@ export class Game{
         }
         // can't call cheat with no claims
         if (lastMessage.messageType !== MessageType.Claim){
-            this.logger?.log('info', `${playerId} tried to call cheat in ${gameId} when there hasn't been a claim.`);
+            logger.log('info', `${playerId} tried to call cheat in ${gameId} when there hasn't been a claim.`);
             return {ok: false, message: ErrorMessage.CanOnlyCheatClaim};
         }
         const lastClaim = lastMessage.message as Claim;
@@ -440,7 +441,7 @@ export class Game{
         const numberOfThatRoll = Game.countNumberOfThatRoll(challengedPlayer.roll, lastClaim.value);
         let roundResults: RoundResults;
         if (lastClaim.quantity > numberOfThatRoll){
-            this.logger?.info('cheat call successful');
+            logger.info('cheat call successful');
             challengedPlayer.numberOfDice--;
             if (challengedPlayer.numberOfDice === 0){
                 challengedPlayer.eliminated = true;
@@ -454,7 +455,7 @@ export class Game{
             }
         }
         else{
-            this.logger?.info('cheat call unsuccessful');
+            logger.info('cheat call unsuccessful');
             const challenger = existingGame.participants.find(participant => participant.userId === playerId);
             challenger.numberOfDice--;
             if (challenger.numberOfDice === 0){
@@ -468,8 +469,8 @@ export class Game{
                 playerEliminated: challenger.eliminated
             }
         }
-        this.logger?.verbose(`gamePopulation is now:`);
-        Game.gamePopulation.forEach((val, key) => this.logger.verbose(`${key}: ${JSON.stringify(val)}`));
+        logger.verbose(`gamePopulation is now:`);
+        Game.gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
         this.messenger.sendGameMessageToAll(gameId, MessageType.RoundResults, roundResults, gamePopulation);
         const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
         if (activePlayers.length === 1){

@@ -6,7 +6,7 @@ import { Participant } from "../interfaces/participant";
 import { GameMessage } from "../interfaces/game-message";
 import messenger from "../messenger";
 
-const game: Game = new Game(logger, messenger);
+const game: Game = new Game(messenger);
 
 /**
  * Create a game.
