@@ -1,3 +1,4 @@
+on: [push]
 uses: mr-smithers-excellent/docker-build-push@v4
 with:
   image: ryanroundhouse/liar
