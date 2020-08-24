@@ -23,10 +23,9 @@ jobs:
         node-version: [14.x]
     steps:
       - uses: actions/checkout@v2
-      - name: building code
+      - name: building and pushing docker image
       - run: npm ci
       - run: npm run build
-      - name: building and pushing docker image
       - uses: mr-smithers-excellent/docker-build-push@v4
         with:
           image: ryanroundhouse/liar-server
