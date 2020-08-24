@@ -5,7 +5,6 @@ ENV PORT 3000
 WORKDIR /usr/src/app
 
 ADD ./dist /usr/src/app
-RUN npm run build
 
 RUN apk update && apk add bash
 
