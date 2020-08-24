@@ -24,8 +24,9 @@ jobs:
     steps:
       - name: check out code
         uses: actions/checkout@v2
-      - name: building server
+      - name: get node_modules
         run: npm ci
+      - name: building server
         run: npm run build
       - name: build and push dockerimage
         uses: mr-smithers-excellent/docker-build-push@v4
