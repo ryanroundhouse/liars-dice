@@ -1,6 +1,13 @@
 name: Build and push docker
 on: [push]
 jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - npm run install
+      - npm run test
   build-and-push-docker:
     name: Build and Push docker
     runs-on: ubuntu-latest
