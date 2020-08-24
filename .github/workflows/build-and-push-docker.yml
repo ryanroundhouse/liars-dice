@@ -13,7 +13,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm run test
+        - run: npm install
+        - run: npm run test
   build-and-push-docker:
     name: Build and Push docker
     runs-on: ubuntu-latest
