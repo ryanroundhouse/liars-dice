@@ -18,11 +18,18 @@ jobs:
   build-and-push-docker:
     name: Build and Push docker
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x]
     steps:
-        - uses: actions/checkout@v2
-        - uses: mr-smithers-excellent/docker-build-push@v4
-          with:
-                image: ryanroundhouse/liar-server
-                registry: docker.io
-                username: ${{ secrets.DOCKER_USERNAME }}
-                password: ${{ secrets.DOCKER_PASSWORD }}
+      - uses: actions/checkout@v2
+      - name: building code
+      - run: npm ci
+      - run: npm run build
+      - name: building and pushing docker image
+      - uses: mr-smithers-excellent/docker-build-push@v4
+        with:
+          image: ryanroundhouse/liar-server
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
