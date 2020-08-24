@@ -22,11 +22,13 @@ jobs:
       matrix:
         node-version: [14.x]
     steps:
-      - uses: actions/checkout@v2
-      - name: building and pushing docker image
-      - run: npm ci
-      - run: npm run build
-      - uses: mr-smithers-excellent/docker-build-push@v4
+      - name: check out code
+        uses: actions/checkout@v2
+      - name: building server
+        run: npm ci
+        run: npm run build
+      - name: build and push dockerimage
+        uses: mr-smithers-excellent/docker-build-push@v4
         with:
           image: ryanroundhouse/liar-server
           registry: docker.io
