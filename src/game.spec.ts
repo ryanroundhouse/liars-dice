@@ -55,7 +55,7 @@ describe("game functionality", () => {
             }
             gamePopulation.set("gameId", gameWithPlayer);
             const result: Result<string> = game.createGame(playerId, gamePopulation);
-            result.ok.should.be.true;
+            result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.CantCreateNewGameWhenInGame);
         });
         it("can create game if you're not in a game", () => {
