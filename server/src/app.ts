@@ -21,6 +21,15 @@ app.use(
   express.static(path.join(__dirname, "public"), { maxAge: 31557600000 })
 );
 
+// CORS Middleware
+app.use((req, res, next) => {
+  // Enabling CORS
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization");
+  next();
+});
+
 app.post('/login', gameController.login);
 app.delete('/logout', gameController.logout);
 app.post('/game/create', gameController.createGame);
