@@ -44,7 +44,7 @@ export function login(req: Request, res: Response){
     const id = uuidv4();
     logger.log('info', `Setting session for user ${id}`);
     req.session.userId = id;
-    res.send({ result: 'OK', message: `Session created as ${id}` });
+    res.send({ result: 'OK', message: `${id}` });
 }
 
 /**
