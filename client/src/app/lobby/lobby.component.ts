@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import * as LiarInterface from '@ryanroundhouse/liars-dice-interface';
 
 @Component({
   selector: 'liar-lobby',
@@ -7,9 +8,13 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./lobby.component.scss']
 })
 export class LobbyComponent implements OnInit {
+  sessionId: string;
 
   constructor(private http: HttpClient) {
-    this.http.post('http://localhost:3000/login', {}).subscribe(data => {console.log(data)});
+    this.http.post<LiarInterface.Result<string>>('http://localhost:3000/login', {result: true}).subscribe(data => {
+      console.log(`sessionId: ${JSON.stringify(data)}`);
+      this.sessionId = data.message;
+    });
   }
 
   ngOnInit(): void {

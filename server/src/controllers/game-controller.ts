@@ -2,9 +2,8 @@ import { Request, Response } from "express";
 import logger from "../logger";
 import { Game } from "../game";
 import { v4 as uuidv4 } from 'uuid';
-import { Participant } from "../interfaces/participant";
-import { GameMessage } from "../interfaces/game-message";
 import messenger from "../messenger";
+import { Participant, GameMessage } from "@ryanroundhouse/liars-dice-interface";
 
 const game: Game = new Game(messenger);
 

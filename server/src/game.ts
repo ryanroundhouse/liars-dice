@@ -1,17 +1,8 @@
-import { GameInterface } from "./interfaces/game-interface";
-import { Result } from "./types/result";
 import { v4 as uuidv4 } from 'uuid';
-import winston from "winston";
-import { Participant } from "./interfaces/participant";
-import { MessageType } from "./enums/messageType";
-import { RoundSetup } from "./interfaces/round-setup";
-import { RoundResults } from "./interfaces/round-results";
-import { GameMessage } from "./interfaces/game-message";
-import { ErrorMessage } from "./enums/errorMessage";
-import { Claim } from "./interfaces/claim";
-import { GameOver } from "./interfaces/game-over";
 import { Messenger } from "./messenger";
 import logger from "./logger";
+import { GameInterface, Participant, RoundSetup, RoundResults, GameMessage, Claim, GameOver, MessageType, Result } from "@ryanroundhouse/liars-dice-interface"
+import { ErrorMessage } from "./enums/errorMessage";
 
 export class Game{
     static gamePopulation = new Map<string, GameInterface>();

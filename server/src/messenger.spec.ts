@@ -3,20 +3,13 @@ process.env.NODE_ENV = 'test'
 
 import "mocha";
 import chai, { expect } from "chai";
-import { Game } from "./game";
 import { Messenger } from "./messenger";
-import { Result } from "./types/result";
-import { GameInterface } from "./interfaces/game-interface";
-import { Participant } from "./interfaces/participant";
-import winston from "winston";
 import WebSocket from "ws";
 import { ErrorMessage } from "./enums/errorMessage";
-import { GameMessage } from "./interfaces/game-message";
 import { MessageType } from "./enums/messageType";
-import { RoundResults } from "./interfaces/round-results";
-import { Claim } from "./interfaces/claim";
 import sinon from "sinon";
 import logger from './logger';
+import { GameInterface, Participant, GameMessage, Result } from "@ryanroundhouse/liars-dice-interface";
 
 logger.silent = true;
 

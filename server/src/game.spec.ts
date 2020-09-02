@@ -5,18 +5,12 @@ import "mocha";
 import chai, { expect, assert } from "chai";
 import { Game } from "./game";
 import { Messenger } from "./messenger";
-import { Result } from "./types/result";
-import { GameInterface } from "./interfaces/game-interface";
-import { Participant } from "./interfaces/participant";
-import WebSocket from "ws";
 import { ErrorMessage } from "./enums/errorMessage";
-import { GameMessage } from "./interfaces/game-message";
 import { MessageType } from "./enums/messageType";
-import { RoundResults } from "./interfaces/round-results";
-import { Claim } from "./interfaces/claim";
 import sinon from "sinon";
-import { GameOver } from "./interfaces/game-over";
 import logger from './logger';
+import WebSocket from "ws";
+import { GameInterface, Participant, GameMessage, Claim, RoundResults, GameOver, Result } from "@ryanroundhouse/liars-dice-interface";
 
 logger.silent = true;
 
