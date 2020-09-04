@@ -36,7 +36,7 @@ export function login(req: Request, res: Response){
     // send error if the user is already logged in
     logger.debug(`session set to ${req.session.userId}`);
     if (req.session.userId != null){
-        res.status(400).send({status: '400', message: 'already logged in.'});
+        res.send({status: '200', message: 'already logged in.'});
         return;
     }
     // create set visitor's session

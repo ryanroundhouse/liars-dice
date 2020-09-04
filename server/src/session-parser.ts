@@ -8,7 +8,8 @@ const sessionParser = session({
     resave: true,
     saveUninitialized: true,
     cookie: {
-      maxAge: 172800000
+      maxAge: 172800000,
+      secure: false
     }
 });
 

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import * as LiarInterface from '@ryanroundhouse/liars-dice-interface';
+import { LobbyService } from '../services/lobby.service';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'liar-lobby',
@@ -8,16 +8,19 @@ import * as LiarInterface from '@ryanroundhouse/liars-dice-interface';
   styleUrls: ['./lobby.component.scss']
 })
 export class LobbyComponent implements OnInit {
-  sessionId: string;
+  loggedIn: boolean = false;
+  loggedInEmitter = new BehaviorSubject<boolean>(this.loggedIn);
 
-  constructor(private http: HttpClient) {
-    this.http.post<LiarInterface.Result<string>>('http://localhost:3000/login', {result: true}).subscribe(data => {
-      console.log(`sessionId: ${JSON.stringify(data)}`);
-      this.sessionId = data.message;
-    });
+  constructor(private lobbyService: LobbyService) {
+  }
+
+  onClickLogout(){
+    this.lobbyService.logout().subscribe(success => this.loggedIn = false, error => console.log(error), () => this.loggedInEmitter.next(this.loggedIn));
+    window.location.reload();
   }
 
   ngOnInit(): void {
+    this.lobbyService.login().subscribe(success => this.loggedIn = true, error => console.log(error), () => this.loggedInEmitter.next(this.loggedIn));
   }
 
 }

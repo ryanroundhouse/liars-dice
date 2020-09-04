@@ -23,10 +23,12 @@
   "dependencies": {
     "@ryanroundhouse/liars-dice-interface": "file:../liars-dice-interface",
     "@types/compression": "^1.7.0",
+    "@types/cors": "^2.8.7",
     "body-parser": "^1.19.0",
     "compression": "^1.7.4",
     "cookie": "^0.4.1",
     "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
     "uuid": "^8.2.0",

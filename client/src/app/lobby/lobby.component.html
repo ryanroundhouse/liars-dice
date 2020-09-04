@@ -1,2 +1,2 @@
-<p>lobby works!</p>
-<p>{{sessionId}}
+<p>Logged in: {{ loggedInEmitter | async }}</p>
+<button (click)="onClickLogout()">Logout</button>

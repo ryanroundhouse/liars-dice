@@ -4,9 +4,11 @@ import bodyParser from "body-parser";
 import path from "path";
 import sessionParser from "./session-parser";
 import * as gameController from "./controllers/game-controller";
+import cors from "cors";
 
 // Create Express server
 const app = express();
+const sourceAddress = "http://localhost:4201";
 
 // Express configuration
 app.set("port", process.env.PORT || 3000);
@@ -21,11 +23,13 @@ app.use(
   express.static(path.join(__dirname, "public"), { maxAge: 31557600000 })
 );
 
+// app.use(cors({origin:[sourceAddress],credentials: true}));
 // CORS Middleware
 app.use((req, res, next) => {
   // Enabling CORS
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+  res.header('Access-Control-Allow-Credentials', "true");
+  res.header("Access-Control-Allow-Origin", sourceAddress);
+  res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT,DELETE");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization");
   next();
 });
