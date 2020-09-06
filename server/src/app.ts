@@ -4,7 +4,6 @@ import bodyParser from "body-parser";
 import path from "path";
 import sessionParser from "./session-parser";
 import * as gameController from "./controllers/game-controller";
-import cors from "cors";
 
 // Create Express server
 const app = express();
