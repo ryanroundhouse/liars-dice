@@ -19,10 +19,10 @@ export class LobbyService {
   }
   
   createGame(): Observable<LiarInterface.Result<string>>{
-    return this.http.post<LiarInterface.Result<string>>('http://localhost:3000/game/create', {withCredentials: true});
+    return this.http.post<LiarInterface.Result<string>>('http://localhost:3000/game/create', {}, {withCredentials: true});
   }
   
   startGame(gameId: string): Observable<LiarInterface.Result<string>>{
-    return this.http.post<LiarInterface.Result<string>>(`http://localhost:3000/game/${gameId}/start`, {withCredentials: true});
+    return this.http.post<LiarInterface.Result<string>>(`http://localhost:3000/game/${gameId}/start`, {}, {withCredentials: true});
   }
 }

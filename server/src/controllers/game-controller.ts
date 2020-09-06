@@ -3,7 +3,7 @@ import logger from "../logger";
 import { Game } from "../game";
 import { v4 as uuidv4 } from 'uuid';
 import messenger from "../messenger";
-import { Participant, GameMessage } from "@ryanroundhouse/liars-dice-interface";
+import { Participant, GameMessage, Result } from "@ryanroundhouse/liars-dice-interface";
 
 const game: Game = new Game(messenger);
 
@@ -25,7 +25,7 @@ export function createGame(req: Request, res: Response){
         return;
     }
     else{
-        res.send({ result: 'OK', gameId: result });
+        res.send(result);
     }
 }
 

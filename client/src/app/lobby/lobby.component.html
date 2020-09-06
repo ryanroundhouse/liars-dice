@@ -1,11 +1,11 @@
 <button (click)="onClickLogin()">Login</button>
 <br/>
-<p>Logged in: {{ loggedInEmitter | async }}</p>
+<p>Logged in: {{ loggedIn }}</p>
 <button (click)="onClickLogout()">Logout</button>
 <br/>
-<p>Game: {{ gameIdEmitter | async }}</p>
+<p>Game: {{ gameId }}</p>
 <button (click)="onClickCreateGame()">Create Game</button>
 <br/><br/>
-<input type="text" id="gameId">
+<input type="text" id="gameIdBox" [(ngModel)]="gameId">
 <br/>
 <button (click)="onClickStartGame()">Start Game</button>
