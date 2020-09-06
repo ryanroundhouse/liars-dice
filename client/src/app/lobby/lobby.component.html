@@ -1,2 +1,11 @@
+<button (click)="onClickLogin()">Login</button>
+<br/>
 <p>Logged in: {{ loggedInEmitter | async }}</p>
 <button (click)="onClickLogout()">Logout</button>
+<br/>
+<p>Game: {{ gameIdEmitter | async }}</p>
+<button (click)="onClickCreateGame()">Create Game</button>
+<br/><br/>
+<input type="text" id="gameId">
+<br/>
+<button (click)="onClickStartGame()">Start Game</button>
