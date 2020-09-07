@@ -1,28 +1,34 @@
 <button (click)="onClickLogin()">Login</button>
 <br/>
-<button (click)="onClickOpenSocket()">Open Socket</button>
-<br/>
 <p>Logged in: {{ loggedIn }}</p>
 <button (click)="onClickLogout()">Logout</button>
 <br/>
 <p>Game: {{ gameId }}</p>
-<button (click)="onClickCreateGame()">Create Game</button>
-<br/><br/>
-<input type="text" id="gameIdBox" [(ngModel)]="gameId">
+<div *ngIf="!gameStarted">
+    <button (click)="onClickCreateGame()">Create Game</button>
+    <br/><br/>
+    <input type="text" id="gameIdBox" [(ngModel)]="gameId">
+    <br/>
+    <input type="text" id="nameBox" [(ngModel)]="name">
+    <br/>
+    <button (click)="onClickJoinGame()">Join Game</button>
+    <button (click)="onClickStartGame()">Start Game</button>
+</div>
+<div *ngIf="players.length > 0">
+    <h1>Players</h1>
+    <ul>
+        <li *ngFor='let player of players'>
+            {{ player.name }}
+        </li>
+    </ul>
+</div>
 <br/>
-<input type="text" id="nameBox" [(ngModel)]="name">
 <br/>
-<button (click)="onClickJoinGame()">Join Game</button>
-<button (click)="onClickStartGame()">Start Game</button>
-<br/>
-<ul>
-    <li *ngFor='let player of players'>
-        {{ player.name }}
-    </li>
-</ul>
+<div *ngIf="gameStarted">
+    <p> dice: {{ dice }}
+</div>
 <br/>
 <br/>
-<p> dice: {{ dice }}
 <ul>
     <li *ngFor='let message of messages'>
         {{ message.messageType }} - {{ message.message | json }}

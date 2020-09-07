@@ -60,6 +60,7 @@ export class LobbyComponent implements OnInit {
     this.messages.push(gameMessage);
     switch (gameMessage.messageType){
       case MessageType.GameStarted:{
+        this.gameStarted = true;
         break;
       }
       case MessageType.RoundStarted:{
