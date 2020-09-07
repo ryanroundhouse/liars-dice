@@ -8,4 +8,19 @@
 <br/><br/>
 <input type="text" id="gameIdBox" [(ngModel)]="gameId">
 <br/>
+<button (click)="onClickJoinGame()">Join Game</button>
 <button (click)="onClickStartGame()">Start Game</button>
+<br/>
+<ul>
+    <li *ngFor='let player of players'>
+        {{ player.name }}
+    </li>
+</ul>
+<br/>
+<br/>
+<p> dice: {{ dice }}
+<ul>
+    <li *ngFor='let message of messages'>
+        {{ message.messageType }} - {{ message.message }}
+    </li>
+</ul>

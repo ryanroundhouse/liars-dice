@@ -9,7 +9,7 @@ const game: Game = new Game(messenger);
 
 /**
  * Create a game.
- * @route POST /game/create
+ * @route GET /game/create
  */
 export function createGame(req: Request, res: Response){
     const userId: string = req.session.userId;
@@ -31,7 +31,7 @@ export function createGame(req: Request, res: Response){
 
 /**
  * Login to get a session id.
- * @route POST /login
+ * @route GET /login
  */
 export function login(req: Request, res: Response){
     // send error if the user is already logged in
@@ -91,7 +91,7 @@ export function joinGame(req: Request, res: Response){
 
 /**
  * Start an existing game.
- * @route POST /game/:gameId/start
+ * @route GET /game/:gameId/start
  */
 export function startGame(req: Request, res: Response){
     const gameId = req.params.gameId;

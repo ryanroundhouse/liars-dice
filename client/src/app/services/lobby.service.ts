@@ -7,22 +7,27 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class LobbyService {
+  includeCredentials: boolean = false;
 
   constructor(private http: HttpClient) { }
 
   login(): Observable<LiarInterface.Result<string>>{
-    return this.http.post<LiarInterface.Result<string>>('http://localhost:3000/login', {}, {withCredentials: true});
+    return this.http.get<LiarInterface.Result<string>>('http://localhost:3000/login', {withCredentials: this.includeCredentials});
   }
 
   logout(): Observable<LiarInterface.Result<string>>{
-    return this.http.delete<LiarInterface.Result<string>>('http://localhost:3000/logout', {withCredentials: true});
+    return this.http.delete<LiarInterface.Result<string>>('http://localhost:3000/logout', {withCredentials: this.includeCredentials});
   }
   
   createGame(): Observable<LiarInterface.Result<string>>{
-    return this.http.post<LiarInterface.Result<string>>('http://localhost:3000/game/create', {}, {withCredentials: true});
+    return this.http.get<LiarInterface.Result<string>>('http://localhost:3000/game/create', {withCredentials: this.includeCredentials});
   }
   
   startGame(gameId: string): Observable<LiarInterface.Result<string>>{
-    return this.http.post<LiarInterface.Result<string>>(`http://localhost:3000/game/${gameId}/start`, {}, {withCredentials: true});
+    return this.http.get<LiarInterface.Result<string>>(`http://localhost:3000/game/${gameId}/start`, {withCredentials: this.includeCredentials});
+  }
+  
+  joinGame(gameId: string): Observable<LiarInterface.Result<string>>{
+    return this.http.post<LiarInterface.Result<string>>(`http://localhost:3000/game/${gameId}/join`, { name: 'test' }, {withCredentials: this.includeCredentials});
   }
 }
