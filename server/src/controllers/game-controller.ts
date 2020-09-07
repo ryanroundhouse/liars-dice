@@ -62,7 +62,9 @@ export function logout(req: Request, res: Response){
         if (ws) {
             ws.close();
         }
-        res.send({ result: 'OK', message: 'Session destroyed' });
+        const result: Result<string> = {ok: true, message: 'Session destroyed'};
+        res.clearCookie('liars-dice');
+        res.send(result);
     });
 }
 
@@ -85,8 +87,7 @@ export function joinGame(req: Request, res: Response){
         res.status(400).send(result);
         return;
     }
-    const participants: Participant[] = result.value;
-    res.send({result: 'OK', message: participants});
+    res.send(result);
 }
 
 /**

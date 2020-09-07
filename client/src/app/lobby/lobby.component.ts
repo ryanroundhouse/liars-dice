@@ -12,44 +12,47 @@ import { GameMessage, MessageType, RoundSetup, Participant } from '@ryanroundhou
 export class LobbyComponent implements OnInit {
   loggedIn: boolean = false;
   gameId: string;
+  name: string = 'bob';
   gameStarted: boolean = false;
   dice: number[] = [];
   players: Participant[] = [];
-  messages: GameMessage[] = [{messageType: 1, message: 'so'}];
+  messages: GameMessage[] = [];
 
   constructor(private lobbyService: LobbyService, private messageService: ServerMessageService) {
   }
 
   onClickLogout(){
-    this.lobbyService.logout().subscribe(success => this.loggedIn = false, error => console.log(error.error.message));
-    this.lobbyService.includeCredentials = false;
-    window.location.reload();
+    this.lobbyService.logout().subscribe(next => this.loggedIn = false, error => console.log(error.error.message));
+    this.messageService.disconnect();
   }
 
   onClickLogin(){
-    this.lobbyService.login().subscribe(success => {
+    this.lobbyService.login().subscribe(next => {
         this.loggedIn = true;
-        this.lobbyService.includeCredentials = true;
-        this.messageService.openWebSocket();
-        this.messageService.messages.subscribe(msg => this.processGameMessage);
+        this.messageService.connect().subscribe(next => this.processGameMessage(next));
+      }, 
+      error => console.log('got a login error: ' + error.error.message));
+  }
+
+  onClickJoinGame(){
+    this.lobbyService.joinGame(this.gameId, this.name).subscribe(next => {
+        console.log('got join game response: ' + JSON.stringify(next));
+        const existingPlayers: Participant[] = next.value;
+        this.players = this.players.concat(existingPlayers);
       }, 
       error => console.log(error.error.message));
   }
 
-  onClickJoinGame(){
-    this.lobbyService.joinGame(this.gameId).subscribe(success => console.log(success), error => console.log(error.error.message));
-  }
-
   onClickCreateGame(){
-    this.lobbyService.createGame().subscribe(success => {
-        this.gameId = success.value;
-        console.log(success);
+    this.lobbyService.createGame().subscribe(next => {
+        this.gameId = next.value;
+        console.log(next);
       }, 
       error => console.log(error));
   }
 
   onClickStartGame(){
-    this.lobbyService.startGame(this.gameId).subscribe(success => this.gameStarted = true, error => console.log(error.error.message));
+    this.lobbyService.startGame(this.gameId).subscribe(next => this.gameStarted = true, error => console.log(error.error.message));
   }
 
   processGameMessage(gameMessage: GameMessage){
@@ -62,10 +65,11 @@ export class LobbyComponent implements OnInit {
       case MessageType.RoundStarted:{
         const roundSetup = gameMessage.message as RoundSetup;
         this.dice = roundSetup.participant.roll;
+        break;
       }
       case MessageType.PlayerJoined:{
-        const newParticipants = gameMessage.message as Participant[];
-        newParticipants.forEach(participant => this.players.push(participant));
+        const newParticipants = gameMessage.message as Participant;
+        this.players.push(newParticipants);
         break;
       }
     }

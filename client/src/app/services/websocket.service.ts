@@ -6,11 +6,19 @@ import { Subject, Observable, Observer } from 'rxjs';
 })
 export class WebsocketService {
   private subject: Subject<MessageEvent>;
+  private ws: WebSocket;
 
   constructor() { }
 
+  public disconnect(){
+    if (this.subject && !this.subject.closed){
+      this.subject.unsubscribe();
+      console.log('unsubscribed from socket messages');
+    }
+  }
+
   public connect(url: string): Subject<MessageEvent>{
-    if (!this.subject){
+    if (!this.subject || this.subject.closed){
       this.subject = this.create(url);
       console.log("Successfully connected to " + url);
     }
@@ -18,19 +26,19 @@ export class WebsocketService {
   }
 
   public create(url: string): Subject<MessageEvent>{
-    let ws = new WebSocket(url);
+    this.ws = new WebSocket(url);
 
     let observable = Observable.create((obs: Observer<MessageEvent>) => {
-      ws.onmessage = obs.next.bind(obs);
-      ws.onerror = obs.error.bind(obs);
-      ws.onclose = obs.complete.bind(obs);
-      return ws.close.bind(ws);
+      this.ws.onmessage = obs.next.bind(obs);
+      this.ws.onerror = obs.error.bind(obs);
+      this.ws.onclose = obs.complete.bind(obs);
+      return this.ws.close.bind(this.ws);
     });
 
     let observer = {
       next: (data: Object) => {
-        if (ws.readyState === WebSocket.OPEN){
-          ws.send(JSON.stringify(data));
+        if (this.ws.readyState === WebSocket.OPEN){
+          this.ws.send(JSON.stringify(data));
         }
       }
     };
