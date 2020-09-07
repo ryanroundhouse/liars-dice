@@ -4,9 +4,10 @@ const secret = 'alibubalay';
 // create a unique sessions per visitor stored as a cookie.
 const sessionParser = session({
     secret,
-    name: "my-session",
+    unset: 'destroy',
     resave: true,
-    saveUninitialized: true,
+    saveUninitialized: false,
+    name: "liars-dice",
     cookie: {
       maxAge: 172800000,
       secure: false

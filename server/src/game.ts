@@ -3,6 +3,7 @@ import { Messenger } from "./messenger";
 import logger from "./logger";
 import { GameInterface, Participant, RoundSetup, RoundResults, GameMessage, Claim, GameOver, MessageType, Result } from "@ryanroundhouse/liars-dice-interface"
 import { ErrorMessage } from "./enums/errorMessage";
+import { exit } from 'shelljs';
 
 export class Game{
     static gamePopulation = new Map<string, GameInterface>();
@@ -78,13 +79,14 @@ export class Game{
             roll: [],
             eliminated: false
         };
+        const otherPlayers = [...existingGame.participants];
         existingGame.participants.push(participant);
-        logger.debug(`${gameId}, ${MessageType.PlayerJoined}, ${existingGame.participants[existingGame.participants.length - 1]}, ${gamePopulation}`);
-        const result = this.messenger.sendGameMessageToAll(gameId, MessageType.PlayerJoined, existingGame.participants[existingGame.participants.length - 1], gamePopulation);
+        logger.debug(`${gameId}, ${MessageType.PlayerJoined}, ${participant}, ${gamePopulation}`);
+        const result = this.messenger.sendGameMessageToAll(gameId, MessageType.PlayerJoined, participant, gamePopulation);
         if (!result.ok){
             return result;
         }
-        return {ok: true, value: existingGame.participants};
+        return {ok: true, value: otherPlayers};
     }
 
     startGame(userId: string, gameId: string, gamePopulation: Map<string, GameInterface>): Result<string>{

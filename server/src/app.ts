@@ -33,11 +33,11 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post('/login', gameController.login);
+app.get('/login', gameController.login);
 app.delete('/logout', gameController.logout);
-app.post('/game/create', gameController.createGame);
+app.get('/game/create', gameController.createGame);
 app.post('/game/:gameId/join', gameController.joinGame);
-app.post('/game/:gameId/start', gameController.startGame);
+app.get('/game/:gameId/start', gameController.startGame);
 app.post('/game/:gameId/claim', gameController.claim);
 
 export default app;

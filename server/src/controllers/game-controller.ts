@@ -9,7 +9,7 @@ const game: Game = new Game(messenger);
 
 /**
  * Create a game.
- * @route POST /game/create
+ * @route GET /game/create
  */
 export function createGame(req: Request, res: Response){
     const userId: string = req.session.userId;
@@ -31,7 +31,7 @@ export function createGame(req: Request, res: Response){
 
 /**
  * Login to get a session id.
- * @route POST /login
+ * @route GET /login
  */
 export function login(req: Request, res: Response){
     // send error if the user is already logged in
@@ -62,7 +62,9 @@ export function logout(req: Request, res: Response){
         if (ws) {
             ws.close();
         }
-        res.send({ result: 'OK', message: 'Session destroyed' });
+        const result: Result<string> = {ok: true, message: 'Session destroyed'};
+        res.clearCookie('liars-dice');
+        res.send(result);
     });
 }
 
@@ -85,13 +87,12 @@ export function joinGame(req: Request, res: Response){
         res.status(400).send(result);
         return;
     }
-    const participants: Participant[] = result.value;
-    res.send({result: 'OK', message: participants});
+    res.send(result);
 }
 
 /**
  * Start an existing game.
- * @route POST /game/:gameId/start
+ * @route GET /game/:gameId/start
  */
 export function startGame(req: Request, res: Response){
     const gameId = req.params.gameId;

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Subject, Observable, Observer } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { GameMessage, Result } from '@ryanroundhouse/liars-dice-interface';
 import { WebsocketService } from './websocket.service';
@@ -10,26 +10,44 @@ const WS_URL = "ws://localhost:3000";
   providedIn: 'root'
 })
 export class ServerMessageService {
-  public messages: Subject<GameMessage>;
+  private subject: Subject<GameMessage>;
 
   constructor(private wsService: WebsocketService) {
     
   }
 
-  openWebSocket(): Result<string>{
-    this.messages = <Subject<GameMessage>>this.wsService.connect(WS_URL).pipe(
-      map((response: MessageEvent): GameMessage => {
-        let data = JSON.parse(response.data);
-        return {
+  disconnect(){
+    this.wsService.disconnect();
+    if (this.subject && !this.subject.closed ){
+      this.subject.unsubscribe();
+    }
+  }
+
+  connect() : Subject<GameMessage>{
+    if (!this.subject || this.subject.closed){
+      this.subject = this.create();
+      console.log("Successfully connected game messages.");
+    }
+    return this.subject;
+  }
+
+  create(): Subject<GameMessage>{
+    this.subject = new Subject<GameMessage>();
+    this.wsService.connect(WS_URL).subscribe(
+      (nextMessageEvent: MessageEvent) => {
+        console.log(nextMessageEvent);
+        const data = JSON.parse(nextMessageEvent.data);
+        const result: GameMessage = {
           messageType: data.messageType,
           message: data.message
-        }
-      })
+        };
+        this.subject.next(result);
+      },
+      (errorMessageEvent) => {
+        console.error(errorMessageEvent);
+      }
     );
-    const result: Result<string> = {
-      ok: true,
-      message: 'web socket opened.'
-    }
-    return result;
+
+    return this.subject;
   }
 }
