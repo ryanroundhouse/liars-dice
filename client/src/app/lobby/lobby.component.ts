@@ -143,6 +143,12 @@ export class LobbyComponent implements OnInit {
     this.lastClaim = "game has started.";
   }
 
+  processGameOver(){
+    this.gameStarted = false;
+    this.gameId = null;
+    this.players = [];
+  }
+
   processGameMessage(gameMessage: GameMessage){
     console.log('message received: ' + JSON.stringify(gameMessage));
     this.messages.push(gameMessage);
@@ -168,9 +174,8 @@ export class LobbyComponent implements OnInit {
         break;
       }
       case MessageType.GameOver:{
-        this.gameStarted = false;
-        this.gameId = null;
-        this.players = [];
+        this.processGameOver();
+        break;
       }
     }
   }
