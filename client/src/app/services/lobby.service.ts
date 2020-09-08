@@ -29,4 +29,18 @@ export class LobbyService {
   joinGame(gameId: string, name: string): Observable<LiarInterface.Result<LiarInterface.Participant[]>>{
     return this.http.post<LiarInterface.Result<LiarInterface.Participant[]>>(`http://localhost:3000/game/${gameId}/join`, { name: name }, {withCredentials: true});
   }
+
+  claim(gameId: string, quantity: number, value: number, bangOn: boolean, cheat: boolean): Observable<LiarInterface.Result<string>>{
+    const claim: LiarInterface.Claim = {
+      quantity: quantity,
+      value: value,
+      cheat: cheat,
+      bangOn: bangOn
+    };
+    const message: LiarInterface.GameMessage = {
+      messageType: LiarInterface.MessageType.Claim,
+      message: claim
+    }
+    return this.http.post<LiarInterface.Result<string>>(`http://localhost:3000/game/${gameId}/claim`, message, {withCredentials: true});
+  }
 }

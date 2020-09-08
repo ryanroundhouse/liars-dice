@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { LobbyService } from '../services/lobby.service';
 
 import { ServerMessageService } from '../services/server-message.service';
-import { GameMessage, MessageType, RoundSetup, Participant } from '@ryanroundhouse/liars-dice-interface';
+import { GameMessage, MessageType, RoundSetup, Participant, Claim } from '@ryanroundhouse/liars-dice-interface';
 
 @Component({
   selector: 'liar-lobby',
@@ -14,11 +14,49 @@ export class LobbyComponent implements OnInit {
   gameId: string;
   name: string = 'bob';
   gameStarted: boolean = false;
+  yourTurn: boolean = false;
+  lastClaim: string;
   dice: number[] = [];
   players: Participant[] = [];
+  playerId: string;
   messages: GameMessage[] = [];
+  quantity: number;
+  value: number;
 
   constructor(private lobbyService: LobbyService, private messageService: ServerMessageService) {
+  }
+
+  onClickClaim(){
+    this.lobbyService.claim(this.gameId, this.quantity, this.value, false, false).subscribe(next => {
+        console.log(next);
+        this.yourTurn = false;
+        this.quantity = null;
+        this.value = null;
+      }, 
+      error => console.error(error.error.message)
+    );
+  }
+
+  onClickCheat(){
+    this.lobbyService.claim(this.gameId, null, null, false, true).subscribe(next => {
+        console.log(next);
+        this.yourTurn = false;
+        this.quantity = null;
+        this.value = null;
+      }, 
+      error => console.error(error.error.message)
+    );
+  }
+
+  onClickBangOn(){
+    this.lobbyService.claim(this.gameId, null, null, true, false).subscribe(next => {
+        console.log(next);
+        this.yourTurn = false;
+        this.quantity = null;
+        this.value = null;
+      }, 
+      error => console.error(error.error.message)
+    );
   }
 
   onClickLogout(){
@@ -28,6 +66,8 @@ export class LobbyComponent implements OnInit {
 
   onClickLogin(){
     this.lobbyService.login().subscribe(next => {
+        console.log(next);
+        this.playerId = next.value;
         this.loggedIn = true;
         this.messageService.connect().subscribe(next => this.processGameMessage(next));
       }, 
@@ -61,11 +101,39 @@ export class LobbyComponent implements OnInit {
     switch (gameMessage.messageType){
       case MessageType.GameStarted:{
         this.gameStarted = true;
+        this.lastClaim = "game has started.";
         break;
       }
       case MessageType.RoundStarted:{
         const roundSetup = gameMessage.message as RoundSetup;
         this.dice = roundSetup.participant.roll;
+        if (roundSetup.startingPlayer){
+          this.yourTurn = true;
+          this.lastClaim = "It's your turn.  Make a claim.";
+        }
+        else{
+          this.lastClaim = "It's someone else's turn.";
+        }
+        break;
+      }
+      case MessageType.Claim:{
+        const claim = gameMessage.message as Claim;
+        const lastPlayer = this.players.find(player => player.userId === claim.playerId);
+        let message: string = "";
+        if (!claim.bangOn && !claim.cheat){
+          message = lastPlayer.name + " claimed " + claim.quantity + " " + claim.value + "s.  It's ";
+        }
+
+        if (claim.nextPlayerId === this.playerId){
+          message += "your turn.";
+          this.yourTurn = true;
+        }
+        else{
+          const nextPlayer = this.players.find(player => player.userId === claim.nextPlayerId);
+          message += nextPlayer.name + "'s turn.";
+        }
+
+        this.lastClaim = message;
         break;
       }
       case MessageType.PlayerJoined:{

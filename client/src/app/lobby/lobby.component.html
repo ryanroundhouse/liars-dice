@@ -25,7 +25,19 @@
 <br/>
 <br/>
 <div *ngIf="gameStarted">
-    <p> dice: {{ dice }}
+    <p> dice: {{ dice }}</p>
+    <p> last claim: {{ lastClaim }}</p>
+    <div *ngIf="yourTurn">
+        <span>quantity:</span>
+        <input type="text" id="quantityBox" [(ngModel)]="quantity">
+        <br/>
+        <span>value:</span>
+        <input type="text" id="valueBox" [(ngModel)]="value">
+        <br/>
+        <button (click)="onClickClaim()">Make Claim</button>
+        <button (click)="onClickCheat()">Cheat!</button>
+        <button (click)="onClickBangOn()">Bang on</button>
+    </div>
 </div>
 <br/>
 <br/>

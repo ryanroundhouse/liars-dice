@@ -37,14 +37,22 @@ export function login(req: Request, res: Response){
     // send error if the user is already logged in
     logger.debug(`session set to ${req.session.userId}`);
     if (req.session.userId != null){
-        res.send({status: '200', message: 'already logged in.'});
+        const alreadyLoggedInResult: Result<string> = {
+            ok: true,
+            value: req.session.userId
+        };
+        res.send(alreadyLoggedInResult);
         return;
     }
     // create set visitor's session
     const id = uuidv4();
     logger.log('info', `Setting session for user ${id}`);
     req.session.userId = id;
-    res.send({ result: 'OK', message: `${id}` });
+    const newLoginResult: Result<string> = {
+        ok: true,
+        value: id
+    };
+    res.send(newLoginResult);
 }
 
 /**
