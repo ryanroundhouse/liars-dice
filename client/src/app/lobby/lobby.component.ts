@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { LobbyService } from '../services/lobby.service';
 
 import { ServerMessageService } from '../services/server-message.service';
-import { GameMessage, MessageType, RoundSetup, Participant, Claim } from '@ryanroundhouse/liars-dice-interface';
+import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults } from '@ryanroundhouse/liars-dice-interface';
 
 @Component({
   selector: 'liar-lobby',
@@ -29,7 +29,6 @@ export class LobbyComponent implements OnInit {
   onClickClaim(){
     this.lobbyService.claim(this.gameId, this.quantity, this.value, false, false).subscribe(next => {
         console.log(next);
-        this.yourTurn = false;
         this.quantity = null;
         this.value = null;
       }, 
@@ -95,54 +94,96 @@ export class LobbyComponent implements OnInit {
     this.lobbyService.startGame(this.gameId).subscribe(next => this.gameStarted = true, error => console.log(error.error.message));
   }
 
+  processRoundResults(results: RoundResults){
+    let message: string = `${results.callingPlayer.name} called ${results.claim.bangOn ? "cheat" : "bang on"} on ${results.calledPlayer.name}.  `;
+    message += `They were ${results.claimSuccess ? "right! " : "wrong! "} They had ${this.countNumberOfThatRoll(results.calledPlayer.roll, results.claim.value)} ${results.claim.value}s.`;
+    if (results.playerEliminated){
+      message += " They are eliminated from the game.";
+    }
+    this.lastClaim = message;
+  }
+
+  processRoundStarted(roundSetup: RoundSetup){
+    this.dice = roundSetup.participant.roll;
+    if (roundSetup.startingPlayer){
+      this.yourTurn = true;
+      this.lastClaim = "It's your turn.  Make a claim.";
+    }
+    else{
+      this.lastClaim = "It's someone else's turn.";
+    }
+  }
+
+  processClaim(claim: Claim){
+    const lastPlayer = this.players.find(player => player.userId === claim.playerId);
+    let message: string = "";
+    if (!claim.bangOn && !claim.cheat){
+      message = lastPlayer.name + " claimed " + claim.quantity + " " + claim.value + "s.  It's ";
+    }
+
+    if (claim.nextPlayerId === this.playerId){
+      message += "your turn.";
+      this.yourTurn = true;
+    }
+    else{
+      const nextPlayer = this.players.find(player => player.userId === claim.nextPlayerId);
+      message += nextPlayer.name + "'s turn.";
+      this.yourTurn = false;
+    }
+
+    this.lastClaim = message;
+  }
+
+  processPlayerJoined(participant: Participant){
+    this.players.push(participant);
+  }
+
+  processGameStarted(){
+    this.gameStarted = true;
+    this.lastClaim = "game has started.";
+  }
+
   processGameMessage(gameMessage: GameMessage){
     console.log('message received: ' + JSON.stringify(gameMessage));
     this.messages.push(gameMessage);
     switch (gameMessage.messageType){
       case MessageType.GameStarted:{
-        this.gameStarted = true;
-        this.lastClaim = "game has started.";
+        this.processGameStarted();
+        break;
+      }
+      case MessageType.RoundResults:{
+        this.processRoundResults(gameMessage.message as RoundResults);
         break;
       }
       case MessageType.RoundStarted:{
-        const roundSetup = gameMessage.message as RoundSetup;
-        this.dice = roundSetup.participant.roll;
-        if (roundSetup.startingPlayer){
-          this.yourTurn = true;
-          this.lastClaim = "It's your turn.  Make a claim.";
-        }
-        else{
-          this.lastClaim = "It's someone else's turn.";
-        }
+        this.processRoundStarted(gameMessage.message as RoundSetup);
         break;
       }
       case MessageType.Claim:{
-        const claim = gameMessage.message as Claim;
-        const lastPlayer = this.players.find(player => player.userId === claim.playerId);
-        let message: string = "";
-        if (!claim.bangOn && !claim.cheat){
-          message = lastPlayer.name + " claimed " + claim.quantity + " " + claim.value + "s.  It's ";
-        }
-
-        if (claim.nextPlayerId === this.playerId){
-          message += "your turn.";
-          this.yourTurn = true;
-        }
-        else{
-          const nextPlayer = this.players.find(player => player.userId === claim.nextPlayerId);
-          message += nextPlayer.name + "'s turn.";
-        }
-
-        this.lastClaim = message;
+        this.processClaim(gameMessage.message as Claim);
         break;
       }
       case MessageType.PlayerJoined:{
-        const newParticipants = gameMessage.message as Participant;
-        this.players.push(newParticipants);
+        this.processPlayerJoined(gameMessage.message as Participant);
         break;
+      }
+      case MessageType.GameOver:{
+        this.gameStarted = false;
+        this.gameId = null;
+        this.players = [];
       }
     }
   }
+
+  private countNumberOfThatRoll(roll: number[], value: number){
+    let count = 0;
+    for(const die of roll){
+        if(+die === +value){
+            count++;
+        }
+    }
+    return count;
+}
 
   ngOnInit(): void {
   }
