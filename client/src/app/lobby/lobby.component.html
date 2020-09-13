@@ -14,6 +14,7 @@
     <button (click)="onClickJoinGame()">Join Game</button>
     <button (click)="onClickStartGame()">Start Game</button>
 </div>
+<p> last claim: {{ lastClaim }}</p>
 <div *ngIf="players.length > 0">
     <h1>Players</h1>
     <ul>
@@ -26,7 +27,7 @@
 <br/>
 <div *ngIf="gameStarted">
     <p> dice: {{ dice }}</p>
-    <p> last claim: {{ lastClaim }}</p>
+    <p> slow down: {{ slowDown }}</p>
     <div *ngIf="yourTurn">
         <span>quantity:</span>
         <input type="text" id="quantityBox" [(ngModel)]="quantity">

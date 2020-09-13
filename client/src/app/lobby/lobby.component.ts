@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Queue } from 'queue-typescript';
 import { LobbyService } from '../services/lobby.service';
 
 import { ServerMessageService } from '../services/server-message.service';
@@ -22,6 +23,8 @@ export class LobbyComponent implements OnInit {
   messages: GameMessage[] = [];
   quantity: number;
   value: number;
+  messageQueue: Queue<GameMessage> = new Queue<GameMessage>();
+  slowDown: boolean = false;
 
   constructor(private lobbyService: LobbyService, private messageService: ServerMessageService) {
   }
@@ -68,6 +71,7 @@ export class LobbyComponent implements OnInit {
         console.log(next);
         this.playerId = next.value;
         this.loggedIn = true;
+        this.slowDown = false;
         this.messageService.connect().subscribe(next => this.processGameMessage(next));
       }, 
       error => console.log('got a login error: ' + error.error.message));
@@ -96,7 +100,7 @@ export class LobbyComponent implements OnInit {
 
   processRoundResults(results: RoundResults){
     let message: string = `${results.callingPlayer.name} called ${results.claim.bangOn ? "cheat" : "bang on"} on ${results.calledPlayer.name}.  `;
-    message += `They were ${results.claimSuccess ? "right! " : "wrong! "} They had ${this.countNumberOfThatRoll(results.calledPlayer.roll, results.claim.value)} ${results.claim.value}s.`;
+    message += `They were ${results.claimSuccess ? "wrong! " : "right! "} They had ${this.countNumberOfThatRoll(results.calledPlayer.roll, results.claim.value)} ${results.claim.value}s.`;
     if (results.playerEliminated){
       message += " They are eliminated from the game.";
     }
@@ -135,6 +139,7 @@ export class LobbyComponent implements OnInit {
   }
 
   processPlayerJoined(participant: Participant){
+    this.lastClaim = `${participant.name} has joined the game.`;
     this.players.push(participant);
   }
 
@@ -143,40 +148,66 @@ export class LobbyComponent implements OnInit {
     this.lastClaim = "game has started.";
   }
 
-  processGameOver(){
+  processGameOver(participant: Participant){
+    this.lastClaim = `Congrats to ${participant.name}!  They win!`;
     this.gameStarted = false;
     this.gameId = null;
     this.players = [];
   }
 
+  private processNextMessage(){
+    console.log("started processing next message...");
+    if (this.messageQueue.length > 0){
+      const gameMessage = this.messageQueue.dequeue();
+      console.log(`There's something in the queue: ${JSON.stringify(gameMessage)}`);
+      switch (gameMessage.messageType){
+        case MessageType.GameStarted:{
+          this.processGameStarted();
+          break;
+        }
+        case MessageType.RoundResults:{
+          this.processRoundResults(gameMessage.message as RoundResults);
+          break;
+        }
+        case MessageType.RoundStarted:{
+          this.processRoundStarted(gameMessage.message as RoundSetup);
+          break;
+        }
+        case MessageType.Claim:{
+          this.processClaim(gameMessage.message as Claim);
+          break;
+        }
+        case MessageType.PlayerJoined:{
+          this.processPlayerJoined(gameMessage.message as Participant);
+          break;
+        }
+        case MessageType.GameOver:{
+          this.processGameOver(gameMessage.message as Participant);
+          break;
+        }
+      }
+      setTimeout(() => {
+        // console.log("timeout expired.");
+        this.processNextMessage();
+      }, 5000);
+    }
+    else{
+      console.log('no more messages to process.  clearing slowdown.');
+      this.slowDown = false;
+    }
+  }
+
   processGameMessage(gameMessage: GameMessage){
     console.log('message received: ' + JSON.stringify(gameMessage));
     this.messages.push(gameMessage);
-    switch (gameMessage.messageType){
-      case MessageType.GameStarted:{
-        this.processGameStarted();
-        break;
-      }
-      case MessageType.RoundResults:{
-        this.processRoundResults(gameMessage.message as RoundResults);
-        break;
-      }
-      case MessageType.RoundStarted:{
-        this.processRoundStarted(gameMessage.message as RoundSetup);
-        break;
-      }
-      case MessageType.Claim:{
-        this.processClaim(gameMessage.message as Claim);
-        break;
-      }
-      case MessageType.PlayerJoined:{
-        this.processPlayerJoined(gameMessage.message as Participant);
-        break;
-      }
-      case MessageType.GameOver:{
-        this.processGameOver();
-        break;
-      }
+    this.messageQueue.enqueue(gameMessage);
+    if (!this.slowDown){
+      console.log("no message loop processing.  Kick it off.");
+      this.slowDown = true;
+      this.processNextMessage();
+    }
+    else{
+      console.log("message loop running.  Wait for the right time.");
     }
   }
 

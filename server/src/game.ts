@@ -356,10 +356,13 @@ export class Game{
             return {ok: false, message: ErrorMessage.CanOnlyCheatClaim};
         }
         const lastClaim = lastMessage.message as Claim;
+        const challenger = existingGame.participants.find(participant => participant.userId === playerId);
         const challengedPlayer = existingGame.participants.find(participant => participant.userId === lastClaim.playerId);
         const numberOfThatRoll = Game.countNumberOfThatRoll(challengedPlayer.roll, lastClaim.value);
         let roundResults: RoundResults;
-        if (lastClaim.quantity === numberOfThatRoll){
+        logger.log('debug', `${challengedPlayer.name} claimed ${lastClaim.quantity} ${lastClaim.value}s and has ${numberOfThatRoll} ${lastClaim.value}s`);
+        logger.log('debug', `${typeof(lastClaim.quantity)} === ${typeof(numberOfThatRoll)} -> ${Number(lastClaim.quantity) === numberOfThatRoll}`);
+        if (Number(lastClaim.quantity) === numberOfThatRoll){
             logger.info('bang on call successful');
             challengedPlayer.numberOfDice = challengedPlayer.numberOfDice - 2;
             if (challengedPlayer.numberOfDice <= 0){
@@ -375,7 +378,6 @@ export class Game{
         }
         else{
             logger.info('bang on call unsuccessful');
-            const challenger = existingGame.participants.find(participant => participant.userId === playerId);
             challenger.numberOfDice = challenger.numberOfDice - 2;
             if (challenger.numberOfDice <= 0){
                 challenger.eliminated = true;

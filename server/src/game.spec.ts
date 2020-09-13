@@ -2319,10 +2319,10 @@ describe("game functionality", () => {
         });
         it("resolveBangOn fails if player wasn't bang on", () => {
             const gameId: string = "gameId";
-            const playerId: string = "playerId";
+            const lastPlayerId: string = "playerId";
             const nextPlayerId: string = "nextPlayerId";
-            const player: Participant = {
-                userId: playerId,
+            const lastPlayer: Participant = {
+                userId: lastPlayerId,
                 name: "current name",
                 numberOfDice: 5,
                 roll: [2,2,3,4,5],
@@ -2340,7 +2340,7 @@ describe("game functionality", () => {
                 value: 5,
                 cheat: false,
                 bangOn: false,
-                playerId,
+                playerId: lastPlayerId,
                 nextPlayerId
             }
             const lastMessage: GameMessage = {
@@ -2348,14 +2348,14 @@ describe("game functionality", () => {
                 message: lastClaim
             };
             const existingGame : GameInterface = {
-                participants: [player, nextPlayer],
+                participants: [lastPlayer, nextPlayer],
                 started: true,
                 finished: false,
                 gameMessageLog: []
             }
             const expectedRoundResults: RoundResults = {
                 callingPlayer: nextPlayer,
-                calledPlayer: player,
+                calledPlayer: lastPlayer,
                 claim: lastClaim,
                 claimSuccess: true,
                 playerEliminated: false
@@ -2373,7 +2373,7 @@ describe("game functionality", () => {
             expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
             const actualRoundResult: RoundResults = messengerStub.sendGameMessageToAll.getCall(0).args[2];
             assert.equal(JSON.stringify(actualRoundResult), JSON.stringify(expectedRoundResults));
-            assert.equal(player.numberOfDice, 5);
+            assert.equal(lastPlayer.numberOfDice, 5);
             assert.equal(nextPlayer.numberOfDice, 3);
             expect(startRoundStub.calledOnce).to.be.true;
         });
