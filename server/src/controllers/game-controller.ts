@@ -123,6 +123,29 @@ export function startGame(req: Request, res: Response){
 }
 
 /**
+ * Get full gamestate.
+ * @route GET /game/:gameId/
+ */
+export function getGameState(req: Request, res: Response){
+    const gameId = req.params.gameId;
+    const userId = req.session.userId;
+    if (typeof gameId === undefined){
+        res.send({ result: '400', message: 'user must log in before requesting a gamestate.' });
+        logger.log('info', `user tried to get a game state ${gameId} before logging in.`);
+        return;
+    }
+    logger.log('info', `got request for ${gameId} game state from ${userId}`);
+
+    const result = game.getGameState(userId, gameId, Game.gamePopulation);
+    if (!result.ok){
+        res.status(400).send(result);
+        return;
+    }
+
+    res.send(result);
+}
+
+/**
  * Make a claim.
  * @route POST /game/:gameId/claim
  */

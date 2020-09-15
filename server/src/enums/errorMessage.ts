@@ -19,6 +19,7 @@ export enum ErrorMessage{
     CantJoinGameWhenInRunningGame = "player can't join a new game when already in a running game.",
     GameAlreadyStarted = "game already started.",
     MustBeInGameToStartGame = "you must be in the game to start the game.",
+    MustBeInGameToGetGameState = "you must be in the game to get the game state.",
     NoGameMessagesFound = "no gameMessages.  Start the game before calculating starting player.",
     UnableToDetermineStartingPlayer = "Unable to determine starting player.",
     GameNotStarted = "game not started",

@@ -89,6 +89,31 @@ export class Game{
         return {ok: true, value: otherPlayers};
     }
 
+    getGameState(userId: string, gameId: string, gamePopulation: Map<string, GameInterface>): Result<GameMessage[]>{
+        if (!userId){
+            return { ok: false, message: ErrorMessage.NoUserIDProvided };
+        }
+        if (!gamePopulation){
+            return { ok: false, message: ErrorMessage.NoGamePopulationProvided };
+        }
+        if (!gameId){
+            return { ok: false, message: ErrorMessage.NoGameIDProvided };
+        }
+        const existingGame = gamePopulation.get(gameId);
+        // does the game exist?
+        if (existingGame == null){
+            return { ok: false, message: ErrorMessage.GameNotFound };
+        }
+        let inGame = false;
+        if (existingGame.participants.find(selectedParticipant => selectedParticipant.userId === userId)){
+            inGame = true;
+        }
+        if (!inGame){
+            return {ok: false, message: ErrorMessage.MustBeInGameToGetGameState };
+        }
+        return { ok: true, value: existingGame.gameMessageLog };
+    }
+
     startGame(userId: string, gameId: string, gamePopulation: Map<string, GameInterface>): Result<string>{
         if (!userId){
             return { ok: false, message: ErrorMessage.NoUserIDProvided };

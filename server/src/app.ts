@@ -38,6 +38,7 @@ app.delete('/logout', gameController.logout);
 app.get('/game/create', gameController.createGame);
 app.post('/game/:gameId/join', gameController.joinGame);
 app.get('/game/:gameId/start', gameController.startGame);
+app.get('/game/:gameId/', gameController.getGameState);
 app.post('/game/:gameId/claim', gameController.claim);
 
 export default app;

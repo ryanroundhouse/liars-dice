@@ -42,6 +42,14 @@ export class LobbyComponent implements OnInit {
         }, 
         error => console.log(`got a login error: ${error.error.message}`));
     }
+    if (this.gameId){
+      this.lobbyService.getGameState(this.gameId).subscribe(next => {
+        const messages = next.value;
+        messages.forEach(message => {this.processGameMessage(message)});
+      }, 
+      error => console.error(`error fetching game state: ${error}`)
+      )
+    }
   }
 
   onClickClaim(){

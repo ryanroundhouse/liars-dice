@@ -26,6 +26,10 @@ export class LobbyService {
     return this.http.get<LiarInterface.Result<string>>(`http://localhost:3000/game/${gameId}/start`, {withCredentials: true});
   }
   
+  getGameState(gameId: string): Observable<LiarInterface.Result<LiarInterface.GameMessage[]>>{
+    return this.http.get<LiarInterface.Result<LiarInterface.GameMessage[]>>(`http://localhost:3000/game/${gameId}`, {withCredentials: true});
+  }
+  
   joinGame(gameId: string, name: string): Observable<LiarInterface.Result<LiarInterface.Participant[]>>{
     return this.http.post<LiarInterface.Result<LiarInterface.Participant[]>>(`http://localhost:3000/game/${gameId}/join`, { name: name }, {withCredentials: true});
   }

@@ -4,6 +4,7 @@
 <button (click)="onClickLogout()">Logout</button>
 <br/>
 <p>Game: {{ gameId }}</p>
+<p *ngIf='gameId'>Join link: http://localhost:4201/join/{{gameId}}</p>
 <div *ngIf="!gameStarted">
     <button (click)="onClickCreateGame()">Create Game</button>
     <br/><br/>
