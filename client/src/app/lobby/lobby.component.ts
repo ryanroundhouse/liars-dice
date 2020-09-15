@@ -4,6 +4,7 @@ import { LobbyService } from '../services/lobby.service';
 
 import { ServerMessageService } from '../services/server-message.service';
 import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults } from '@ryanroundhouse/liars-dice-interface';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'liar-lobby',
@@ -16,7 +17,7 @@ export class LobbyComponent implements OnInit {
   name: string = 'bob';
   gameStarted: boolean = false;
   yourTurn: boolean = false;
-  lastClaim: string;
+  mainMessage: string;
   dice: number[] = [];
   players: Participant[] = [];
   playerId: string;
@@ -26,7 +27,21 @@ export class LobbyComponent implements OnInit {
   messageQueue: Queue<GameMessage> = new Queue<GameMessage>();
   slowDown: boolean = false;
 
-  constructor(private lobbyService: LobbyService, private messageService: ServerMessageService) {
+  constructor(private lobbyService: LobbyService, private messageService: ServerMessageService, private route: ActivatedRoute) {
+  }
+
+  ngOnInit(): void {
+    this.gameId = this.route.snapshot.params['gameId'];
+    if (!this.playerId){
+      this.lobbyService.login().subscribe(next => {
+          console.log(next);
+          this.playerId = next.value;
+          this.loggedIn = true;
+          this.slowDown = false;
+          this.messageService.connect().subscribe(next => this.processGameMessage(next), error => console.error(`error when subscribing to messages: ${console.error}`));
+        }, 
+        error => console.log(`got a login error: ${error.error.message}`));
+    }
   }
 
   onClickClaim(){
@@ -67,14 +82,6 @@ export class LobbyComponent implements OnInit {
   }
 
   onClickLogin(){
-    this.lobbyService.login().subscribe(next => {
-        console.log(next);
-        this.playerId = next.value;
-        this.loggedIn = true;
-        this.slowDown = false;
-        this.messageService.connect().subscribe(next => this.processGameMessage(next));
-      }, 
-      error => console.log('got a login error: ' + error.error.message));
   }
 
   onClickJoinGame(){
@@ -104,17 +111,17 @@ export class LobbyComponent implements OnInit {
     if (results.playerEliminated){
       message += " They are eliminated from the game.";
     }
-    this.lastClaim = message;
+    this.mainMessage = message;
   }
 
   processRoundStarted(roundSetup: RoundSetup){
     this.dice = roundSetup.participant.roll;
     if (roundSetup.startingPlayer){
       this.yourTurn = true;
-      this.lastClaim = "It's your turn.  Make a claim.";
+      this.mainMessage = "It's your turn.  Make a claim.";
     }
     else{
-      this.lastClaim = "It's someone else's turn.";
+      this.mainMessage = "It's someone else's turn.";
     }
   }
 
@@ -135,21 +142,21 @@ export class LobbyComponent implements OnInit {
       this.yourTurn = false;
     }
 
-    this.lastClaim = message;
+    this.mainMessage = message;
   }
 
   processPlayerJoined(participant: Participant){
-    this.lastClaim = `${participant.name} has joined the game.`;
+    this.mainMessage = `${participant.name} has joined the game.`;
     this.players.push(participant);
   }
 
   processGameStarted(){
     this.gameStarted = true;
-    this.lastClaim = "game has started.";
+    this.mainMessage = "game has started.";
   }
 
   processGameOver(participant: Participant){
-    this.lastClaim = `Congrats to ${participant.name}!  They win!`;
+    this.mainMessage = `Congrats to ${participant.name}!  They win!`;
     this.gameStarted = false;
     this.gameId = null;
     this.players = [];
@@ -219,9 +226,5 @@ export class LobbyComponent implements OnInit {
         }
     }
     return count;
-}
-
-  ngOnInit(): void {
   }
-
 }

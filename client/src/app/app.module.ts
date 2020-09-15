@@ -9,11 +9,13 @@ import { AppComponent } from './app.component';
 import { LobbyComponent } from './lobby/lobby.component';
 
 import { InterceptorService } from './services/interceptor.service';
+import { JoinComponent } from './join/join.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    LobbyComponent
+    LobbyComponent,
+    JoinComponent
   ],
   imports: [
     BrowserModule,

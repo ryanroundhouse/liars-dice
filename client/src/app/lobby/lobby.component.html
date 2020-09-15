@@ -14,7 +14,7 @@
     <button (click)="onClickJoinGame()">Join Game</button>
     <button (click)="onClickStartGame()">Start Game</button>
 </div>
-<p> last claim: {{ lastClaim }}</p>
+<p>{{ mainMessage }}</p>
 <div *ngIf="players.length > 0">
     <h1>Players</h1>
     <ul>
