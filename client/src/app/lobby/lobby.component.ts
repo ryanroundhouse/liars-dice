@@ -3,7 +3,7 @@ import { Queue } from 'queue-typescript';
 import { LobbyService } from '../services/lobby.service';
 
 import { ServerMessageService } from '../services/server-message.service';
-import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults } from '@ryanroundhouse/liars-dice-interface';
+import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults, UiGameMessage } from '@ryanroundhouse/liars-dice-interface';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
@@ -24,7 +24,7 @@ export class LobbyComponent implements OnInit {
   messages: GameMessage[] = [];
   quantity: number;
   value: number;
-  messageQueue: Queue<GameMessage> = new Queue<GameMessage>();
+  messageQueue: Queue<UiGameMessage> = new Queue<UiGameMessage>();
   slowDown: boolean = false;
 
   constructor(private lobbyService: LobbyService, private messageService: ServerMessageService, private route: ActivatedRoute) {
@@ -38,14 +38,14 @@ export class LobbyComponent implements OnInit {
           this.playerId = next.value;
           this.loggedIn = true;
           this.slowDown = false;
-          this.messageService.connect().subscribe(next => this.processGameMessage(next), error => console.error(`error when subscribing to messages: ${console.error}`));
+          this.messageService.connect().subscribe(next => this.processGameMessage(next, 5), error => console.error(`error when subscribing to messages: ${console.error}`));
         }, 
         error => console.log(`got a login error: ${error.error.message}`));
     }
     if (this.gameId){
       this.lobbyService.getGameState(this.gameId).subscribe(next => {
         const messages = next.value;
-        messages.forEach(message => {this.processGameMessage(message)});
+        messages.forEach(message => {this.processGameMessage(message, 0)});
       }, 
       error => console.error(`error fetching game state: ${error}`)
       )
@@ -87,9 +87,6 @@ export class LobbyComponent implements OnInit {
   onClickLogout(){
     this.lobbyService.logout().subscribe(next => this.loggedIn = false, error => console.log(error.error.message));
     this.messageService.disconnect();
-  }
-
-  onClickLogin(){
   }
 
   onClickJoinGame(){
@@ -173,38 +170,38 @@ export class LobbyComponent implements OnInit {
   private processNextMessage(){
     console.log("started processing next message...");
     if (this.messageQueue.length > 0){
-      const gameMessage = this.messageQueue.dequeue();
-      console.log(`There's something in the queue: ${JSON.stringify(gameMessage)}`);
-      switch (gameMessage.messageType){
+      const uiGameMessage: UiGameMessage = this.messageQueue.dequeue();
+      console.log(`There's something in the queue: ${JSON.stringify(uiGameMessage)}`);
+      switch (uiGameMessage.gameMessage.messageType){
         case MessageType.GameStarted:{
           this.processGameStarted();
           break;
         }
         case MessageType.RoundResults:{
-          this.processRoundResults(gameMessage.message as RoundResults);
+          this.processRoundResults(uiGameMessage.gameMessage.message as RoundResults);
           break;
         }
         case MessageType.RoundStarted:{
-          this.processRoundStarted(gameMessage.message as RoundSetup);
+          this.processRoundStarted(uiGameMessage.gameMessage.message as RoundSetup);
           break;
         }
         case MessageType.Claim:{
-          this.processClaim(gameMessage.message as Claim);
+          this.processClaim(uiGameMessage.gameMessage.message as Claim);
           break;
         }
         case MessageType.PlayerJoined:{
-          this.processPlayerJoined(gameMessage.message as Participant);
+          this.processPlayerJoined(uiGameMessage.gameMessage.message as Participant);
           break;
         }
         case MessageType.GameOver:{
-          this.processGameOver(gameMessage.message as Participant);
+          this.processGameOver(uiGameMessage.gameMessage.message as Participant);
           break;
         }
       }
       setTimeout(() => {
         // console.log("timeout expired.");
         this.processNextMessage();
-      }, 5000);
+      }, uiGameMessage.secondsDelay * 1000);
     }
     else{
       console.log('no more messages to process.  clearing slowdown.');
@@ -212,10 +209,11 @@ export class LobbyComponent implements OnInit {
     }
   }
 
-  processGameMessage(gameMessage: GameMessage){
+  processGameMessage(gameMessage: GameMessage, seconds: number){
     console.log('message received: ' + JSON.stringify(gameMessage));
     this.messages.push(gameMessage);
-    this.messageQueue.enqueue(gameMessage);
+    const uiGameMessage: UiGameMessage = {gameMessage: gameMessage, secondsDelay: seconds};
+    this.messageQueue.enqueue(uiGameMessage);
     if (!this.slowDown){
       console.log("no message loop processing.  Kick it off.");
       this.slowDown = true;

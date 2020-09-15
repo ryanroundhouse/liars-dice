@@ -8,6 +8,7 @@ import { RoundResults } from "./interfaces/round-results";
 import { RoundSetup } from "./interfaces/round-setup";
 import { MessageType } from "./enums/messageType";
 import { Result } from "./types/result";
+import { UiGameMessage } from "./interfaces/ui-game-message";
 
 export {Claim};
 export {GameInterface};
@@ -19,3 +20,4 @@ export {RoundResults};
 export {RoundSetup};
 export {MessageType};
 export {Result};
+export {UiGameMessage};
