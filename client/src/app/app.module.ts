@@ -10,12 +10,16 @@ import { LobbyComponent } from './lobby/lobby.component';
 
 import { InterceptorService } from './services/interceptor.service';
 import { JoinComponent } from './join/join.component';
+import { RollComponent } from './lobby/roll/roll.component';
+import { SelectionComponent } from './lobby/selection/selection.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LobbyComponent,
-    JoinComponent
+    JoinComponent,
+    RollComponent,
+    SelectionComponent
   ],
   imports: [
     BrowserModule,

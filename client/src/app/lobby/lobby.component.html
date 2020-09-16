@@ -1,4 +1,5 @@
 <p>Logged in: {{ loggedIn }}</p>
+<p> slow down: {{ slowDown }}</p>
 <button (click)="onClickLogout()">Logout</button>
 <br/>
 <p>Game: {{ gameId }}</p>
@@ -25,9 +26,9 @@
 <br/>
 <br/>
 <div *ngIf="gameStarted">
-    <p> dice: {{ dice }}</p>
-    <p> slow down: {{ slowDown }}</p>
+    <liar-roll [dice]="dice"></liar-roll>
     <div *ngIf="yourTurn">
+        <liar-selection [minQuantity]="minQuantity"></liar-selection><br/><br/>
         <span>quantity:</span>
         <input type="text" id="quantityBox" [(ngModel)]="quantity">
         <br/>

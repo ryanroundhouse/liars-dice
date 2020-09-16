@@ -15,6 +15,7 @@ export class LobbyComponent implements OnInit {
   loggedIn: boolean = false;
   gameId: string;
   name: string = 'bob';
+  minQuantity: number = 1;
   gameStarted: boolean = false;
   yourTurn: boolean = false;
   mainMessage: string;
@@ -121,6 +122,7 @@ export class LobbyComponent implements OnInit {
 
   processRoundStarted(roundSetup: RoundSetup){
     this.dice = roundSetup.participant.roll;
+    this.minQuantity = 1;
     if (roundSetup.startingPlayer){
       this.yourTurn = true;
       this.mainMessage = "It's your turn.  Make a claim.";
@@ -146,7 +148,7 @@ export class LobbyComponent implements OnInit {
       message += nextPlayer.name + "'s turn.";
       this.yourTurn = false;
     }
-
+    this.minQuantity = Number(claim.quantity) + 1;
     this.mainMessage = message;
   }
 
