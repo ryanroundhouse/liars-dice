@@ -3,7 +3,7 @@ import { Queue } from 'queue-typescript';
 import { LobbyService } from '../services/lobby.service';
 
 import { ServerMessageService } from '../services/server-message.service';
-import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults, UiGameMessage } from '@ryanroundhouse/liars-dice-interface';
+import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults, UiGameMessage, GameOver } from '@ryanroundhouse/liars-dice-interface';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
@@ -40,7 +40,7 @@ export class LobbyComponent implements OnInit {
         this.playerId = next.value;
         this.loggedIn = true;
         this.slowDown = false;
-        this.messageService.connect().subscribe(next => this.processGameMessage(next, 5), error => console.error(`error when subscribing to messages: ${console.error}`));
+        this.messageService.connect().subscribe(next => this.processGameMessage(next, 0), error => console.error(`error when subscribing to messages: ${console.error}`));
       },
         error => console.log(`got a login error: ${error.error.message}`));
     }
@@ -64,47 +64,27 @@ export class LobbyComponent implements OnInit {
     }
   }
 
+  onClaim(event: Claim){
+    this.lobbyService.claim(this.gameId, event.quantity, event.value, event.bangOn, event.cheat).subscribe(next => {
+      console.log(next);
+      this.quantity = null;
+      this.value = null;
+      this.yourTurn = false;
+    },
+      error => console.error(error.error.message)
+    );
+  }
+
   onClickCopyGameLink(inputElement) {
     inputElement.select();
     document.execCommand('copy');
     inputElement.setSelectionRange(0, 0);
   }
 
-  onClickClaim() {
-    this.lobbyService.claim(this.gameId, this.quantity, this.value, false, false).subscribe(next => {
-      console.log(next);
-      this.quantity = null;
-      this.value = null;
-    },
-      error => console.error(error.error.message)
-    );
-  }
-
-  onClickCheat() {
-    this.lobbyService.claim(this.gameId, null, null, false, true).subscribe(next => {
-      console.log(next);
-      this.yourTurn = false;
-      this.quantity = null;
-      this.value = null;
-    },
-      error => console.error(error.error.message)
-    );
-  }
-
-  onClickBangOn() {
-    this.lobbyService.claim(this.gameId, null, null, true, false).subscribe(next => {
-      console.log(next);
-      this.yourTurn = false;
-      this.quantity = null;
-      this.value = null;
-    },
-      error => console.error(error.error.message)
-    );
-  }
-
   onClickLogout() {
     this.lobbyService.logout().subscribe(next => this.loggedIn = false, error => console.log(error.error.message));
     this.messageService.disconnect();
+    window.location.reload();
   }
 
   onClickCreateGame() {
@@ -143,6 +123,7 @@ export class LobbyComponent implements OnInit {
     }
     else {
       this.mainMessage = "It's someone else's turn.";
+      this.yourTurn = false;
     }
   }
 
@@ -176,8 +157,13 @@ export class LobbyComponent implements OnInit {
     this.mainMessage = "game has started.";
   }
 
-  processGameOver(participant: Participant) {
-    this.mainMessage = `Congrats to ${participant.name}!  They win!`;
+  processGameOver(gameOver: GameOver) {
+    if (gameOver.winner.userId === this.playerId){
+      this.mainMessage = `Congrats!  You win!`;
+    }
+    else{
+      this.mainMessage = `Congrats to ${gameOver.winner.name} on their win!  Better luck next time.`;
+    }
     this.gameStarted = false;
     this.setGameId(null);
     this.players = [];
@@ -185,6 +171,7 @@ export class LobbyComponent implements OnInit {
 
   private processNextMessage() {
     console.log("started processing next message...");
+    let secondsDelay = 0;
     if (this.messageQueue.length > 0) {
       const uiGameMessage: UiGameMessage = this.messageQueue.dequeue();
       console.log(`There's something in the queue: ${JSON.stringify(uiGameMessage)}`);
@@ -194,6 +181,7 @@ export class LobbyComponent implements OnInit {
           break;
         }
         case MessageType.RoundResults: {
+          secondsDelay = 5;
           this.processRoundResults(uiGameMessage.gameMessage.message as RoundResults);
           break;
         }
@@ -210,14 +198,14 @@ export class LobbyComponent implements OnInit {
           break;
         }
         case MessageType.GameOver: {
-          this.processGameOver(uiGameMessage.gameMessage.message as Participant);
+          this.processGameOver(uiGameMessage.gameMessage.message as GameOver);
           break;
         }
       }
       setTimeout(() => {
         // console.log("timeout expired.");
         this.processNextMessage();
-      }, uiGameMessage.secondsDelay * 1000);
+      }, secondsDelay * 1000);
     }
     else {
       console.log('no more messages to process.  clearing slowdown.');

@@ -1,4 +1,5 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
+import { Claim } from '@ryanroundhouse/liars-dice-interface';
 
 @Component({
   selector: 'liar-selection',
@@ -7,6 +8,7 @@ import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/cor
 })
 export class SelectionComponent implements OnInit, OnChanges {
   @Input() minQuantity: number;
+  @Output() claim = new EventEmitter<Claim>();
   quantity: number = 3;
   value: number = 3;
   dice: number[] = [];
@@ -49,6 +51,36 @@ export class SelectionComponent implements OnInit, OnChanges {
       --this.quantity;
       this.regenerateDice();
     }
+  }
+
+  onClickBangOn(){
+    const bangOnClaim: Claim = {
+      quantity: null,
+      value: null,
+      bangOn: true,
+      cheat: false
+    }
+    this.claim.next(bangOnClaim);
+  }
+
+  onClickCheat(){
+    const cheatClaim: Claim = {
+      quantity: null,
+      value: null,
+      bangOn: false,
+      cheat: true
+    }
+    this.claim.next(cheatClaim);
+  }
+
+  onClickClaim(){
+    const claim: Claim = {
+      quantity: this.quantity,
+      value: this.value,
+      bangOn: false,
+      cheat: false
+    }
+    this.claim.next(claim);
   }
 
   onClickMore(){

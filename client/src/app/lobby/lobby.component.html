@@ -1,12 +1,19 @@
-<p>Logged in: {{ loggedIn }}</p>
-<p> slow down: {{ slowDown }}</p>
+<div>
+    <p>Logged in: {{ loggedIn }}</p>
+    <p> slow down: {{ slowDown }}</p>
+    <p *ngIf="gameId">Game: {{ gameId }}</p>
+    <br/>
+</div>
 <button (click)="onClickLogout()">Logout</button>
-<br/>
-<p>Game: {{ gameId }}</p>
-<div *ngIf="!gameStarted">
+<br/><br/>
+<div *ngIf="!gameId">
     <button (click)="onClickCreateGame()">Create Game</button>
+</div>
+<div *ngIf="gameId && !gameStarted">
     <br/><br/>
-    <input type="text" id="gameIdBox" [(ngModel)]="joinLink" #userinput><button (click)="onClickCopyGameLink(userinput)" >Copy Link</button>
+    <div *ngIf="gameId">
+        <input type="text" id="gameIdBox" [(ngModel)]="joinLink" #userinput><button (click)="onClickCopyGameLink(userinput)" >Copy Link</button>
+    </div>
     <br/>
     <input type="text" id="nameBox" [(ngModel)]="name">
     <br/>
@@ -25,18 +32,7 @@
 <br/>
 <div *ngIf="gameStarted">
     <liar-roll [dice]="dice"></liar-roll>
-    <div *ngIf="yourTurn">
-        <liar-selection [minQuantity]="minQuantity"></liar-selection><br/><br/>
-        <span>quantity:</span>
-        <input type="text" id="quantityBox" [(ngModel)]="quantity">
-        <br/>
-        <span>value:</span>
-        <input type="text" id="valueBox" [(ngModel)]="value">
-        <br/>
-        <button (click)="onClickClaim()">Make Claim</button>
-        <button (click)="onClickCheat()">Cheat!</button>
-        <button (click)="onClickBangOn()">Bang on</button>
-    </div>
+    <liar-selection *ngIf="yourTurn" [minQuantity]="minQuantity" (claim)="onClaim($event)"></liar-selection><br/><br/>
 </div>
 <br/>
 <br/>
