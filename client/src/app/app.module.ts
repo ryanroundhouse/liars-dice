@@ -12,6 +12,7 @@ import { InterceptorService } from './services/interceptor.service';
 import { JoinComponent } from './join/join.component';
 import { RollComponent } from './lobby/roll/roll.component';
 import { SelectionComponent } from './lobby/selection/selection.component';
+import { ClaimComponent } from './lobby/claim/claim.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { SelectionComponent } from './lobby/selection/selection.component';
     LobbyComponent,
     JoinComponent,
     RollComponent,
-    SelectionComponent
+    SelectionComponent,
+    ClaimComponent
   ],
   imports: [
     BrowserModule,

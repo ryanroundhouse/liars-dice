@@ -26,6 +26,7 @@ export class LobbyComponent implements OnInit {
   messages: GameMessage[] = [];
   quantity: number;
   value: number;
+  lastClaim: Claim;
   messageQueue: Queue<UiGameMessage> = new Queue<UiGameMessage>();
   slowDown: boolean = false;
 
@@ -64,7 +65,7 @@ export class LobbyComponent implements OnInit {
     }
   }
 
-  onClaim(event: Claim){
+  onClaim(event: Claim) {
     this.lobbyService.claim(this.gameId, event.quantity, event.value, event.bangOn, event.cheat).subscribe(next => {
       console.log(next);
       this.quantity = null;
@@ -106,6 +107,7 @@ export class LobbyComponent implements OnInit {
   }
 
   processRoundResults(results: RoundResults) {
+    this.lastClaim = null;
     let message: string = `${results.callingPlayer.name} called ${results.claim.bangOn ? "cheat" : "bang on"} on ${results.calledPlayer.name}.  `;
     message += `They were ${results.claimSuccess ? "wrong! " : "right! "} They had ${this.countNumberOfThatRoll(results.calledPlayer.roll, results.claim.value)} ${results.claim.value}s.`;
     if (results.playerEliminated) {
@@ -134,6 +136,8 @@ export class LobbyComponent implements OnInit {
       message = lastPlayer.name + " claimed " + claim.quantity + " " + claim.value + "s.  It's ";
     }
 
+    this.lastClaim = claim;
+
     if (claim.nextPlayerId === this.playerId) {
       message += "your turn.";
       this.yourTurn = true;
@@ -158,10 +162,10 @@ export class LobbyComponent implements OnInit {
   }
 
   processGameOver(gameOver: GameOver) {
-    if (gameOver.winner.userId === this.playerId){
+    if (gameOver.winner.userId === this.playerId) {
       this.mainMessage = `Congrats!  You win!`;
     }
-    else{
+    else {
       this.mainMessage = `Congrats to ${gameOver.winner.name} on their win!  Better luck next time.`;
     }
     this.gameStarted = false;
