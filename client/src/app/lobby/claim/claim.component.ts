@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { Claim, Participant } from '@ryanroundhouse/liars-dice-interface';
 
 @Component({
@@ -6,25 +6,36 @@ import { Claim, Participant } from '@ryanroundhouse/liars-dice-interface';
   templateUrl: './claim.component.html',
   styleUrls: ['./claim.component.scss']
 })
-export class ClaimComponent implements OnInit {
+export class ClaimComponent implements OnInit, OnChanges {
   private _claim: Claim;
   @Input() set claim(value: Claim) {
-
     this._claim = value;
-    this.renderClaim(this._claim);
-    this.regenerateDice(this._claim);
+    console.log(`new claim made ${JSON.stringify(this._claim)} - ${JSON.stringify(this.players)} - ${JSON.stringify(this.playerId)}`);
   }
   get claim(): Claim {
 
     return this._claim;
 
   }
-  @Input() players: Participant[];
+
+  private _players: Participant[];
+  @Input() set players(value: Participant[]){
+    console.log(`players set: ${JSON.stringify(value)}`);
+    this._players = value;
+  }
+  get players(): Participant[]{
+    return this._players;
+  }
+
   @Input() playerId: string;
   claimDescription: string;
   dice: number[] = [];
 
   constructor() { }
+  ngOnChanges(changes: SimpleChanges): void {
+    this.renderClaim(this._claim);
+    this.regenerateDice(this._claim);
+  }
 
   ngOnInit(): void {
   }
@@ -45,6 +56,7 @@ export class ClaimComponent implements OnInit {
       this.claimDescription = null;
     }
     else if (!claim.bangOn && !claim.cheat) {
+      console.log(`players: ${JSON.stringify(this.players)} - ${JSON.stringify(claim)}`);
       const claimer = this.players.find(p => p.userId === claim.playerId);
       const claimerName = claimer.userId === this.playerId ? "You" : claimer.name;
       this.claimDescription = `${claimerName} claimed ${claim.quantity} ${claim.value}${claim.quantity > 1 ? 's' : ''}.`;

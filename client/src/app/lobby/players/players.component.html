@@ -1,10 +1,10 @@
 <h1>Players</h1>
-{{ selectedPlayer }}
 <ul>
     <li *ngFor='let player of players'>
-        <div [style.background-color]="selectedPlayer === player.userId ? 'red' : ''">
+        <div [className]="selectedPlayer === player.userId ? 'selected' : ''">
             <img src="{{'assets/img/silhouette1.png'}}"/><br/>
-            <span>{{ player.name }} - {{ player.userId }}</span>
+            <span *ngIf="!claim || (claim && claim.playerId !== player.userId)">{{ player.name }}</span>
+            <liar-claim *ngIf="claim && claim.playerId === player.userId" [claim]="claim" [players]="players" [playerId]="playerId"></liar-claim>
         </div>
     </li>
 </ul>

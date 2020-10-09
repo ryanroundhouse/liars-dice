@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { Participant } from '@ryanroundhouse/liars-dice-interface';
+import { Claim, Participant } from '@ryanroundhouse/liars-dice-interface';
 
 @Component({
   selector: 'liar-players',
@@ -9,6 +9,8 @@ import { Participant } from '@ryanroundhouse/liars-dice-interface';
 export class PlayersComponent implements OnInit {
   @Input() players: Participant[];
   @Input() selectedPlayer: string;
+  @Input() claim: Claim;
+  @Input() playerId: string;
   
   constructor() { }
 
