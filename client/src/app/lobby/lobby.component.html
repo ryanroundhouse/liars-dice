@@ -22,12 +22,7 @@
 <p>{{ mainMessage }}</p>
 <liar-claim [claim]="lastClaim" [players]="players" [playerId]="playerId"></liar-claim>
 <div *ngIf="players.length > 0">
-    <h1>Players</h1>
-    <ul>
-        <li *ngFor='let player of players'>
-            {{ player.name }}
-        </li>
-    </ul>
+    <liar-players [players]="players" [selectedPlayer]="playerTurn"></liar-players>
 </div>
 <br/>
 <br/>

@@ -209,13 +209,9 @@ export class Game{
             for (let i = 0; i < participant.numberOfDice; i++){
                 participant.roll.push(Game.getRandomInt(6) + 1);
             }
-            let starting = false;
-            if (participant.userId === startingPlayer.userId){
-                starting = true;
-            }
             const roundSetup: RoundSetup = {
                 participant,
-                startingPlayer: starting
+                startingPlayerId: startingPlayer.userId
             }
             resultList.push(this.messenger.sendGameMessageToOne(gameId, participant.userId, MessageType.RoundStarted, roundSetup, gamePopulation));
         });
@@ -293,9 +289,9 @@ export class Game{
         if (lastMessage.messageType === MessageType.RoundStarted){
             // find the starting player's roundstarted.  It's not always the last one.
             const reverseGameMessageLog = existingGame.gameMessageLog.slice().reverse();
-            const startingPlayerMessage = reverseGameMessageLog.find(gameMessage => gameMessage.messageType === MessageType.RoundStarted && (gameMessage.message as RoundSetup).startingPlayer);
+            const startingPlayerMessage = reverseGameMessageLog.find(gameMessage => gameMessage.messageType === MessageType.RoundStarted && (gameMessage.message as RoundSetup).startingPlayerId);
             logger.debug(`found startingPlayer from: ${JSON.stringify(startingPlayerMessage)}`);
-            if ((startingPlayerMessage.message as RoundSetup).participant.userId !== playerId){
+            if ((startingPlayerMessage.message as RoundSetup).startingPlayerId !== playerId){
                 logger.log('info', `${playerId} tried to claim in ${gameId} when it's not their turn!`);
                 return {ok: false, message: ErrorMessage.NotYourTurn};
             }

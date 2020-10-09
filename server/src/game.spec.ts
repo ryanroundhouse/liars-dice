@@ -667,8 +667,8 @@ describe("game functionality", () => {
             expect(nextPlayerWebSocketStub.send.calledOnce).to.be.true;
             const startingPlayerMessage = JSON.parse(startingPlayerWebSocketStub.send.firstCall.args[0]);
             const nextPlayerMessage = JSON.parse(nextPlayerWebSocketStub.send.firstCall.args[0]);
-            startingPlayerMessage.message.startingPlayer.should.equal(true);
-            nextPlayerMessage.message.startingPlayer.should.equal(false);
+            expect(startingPlayerMessage.message.startingPlayerId).to.be.a('string');
+            expect(nextPlayerMessage.message.startingPlayerId).to.be.a('string');
             startingPlayerMessage.message.participant.roll.length.should.equal(startingPlayer.numberOfDice);
             nextPlayerMessage.message.participant.roll.length.should.equal(nextPlayer.numberOfDice);
             startingPlayerMessage.messageType.should.equal(MessageType.RoundStarted);
@@ -864,6 +864,7 @@ describe("game functionality", () => {
         it("processClaim fails if it's not your turn and responding to starting event", () => {
             const gameId: string = "gameId";
             const playerId: string = "playerId";
+            const nextPlayerId: string = "nextPlayerId";
             const currentClaim: GameMessage = {
                 messageType: MessageType.Claim,
                 message: {
@@ -873,6 +874,13 @@ describe("game functionality", () => {
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
             const player: Participant = {
                 userId: playerId,
+                name: "player",
+                numberOfDice: 3,
+                roll: [],
+                eliminated: false
+            }
+            const nextPlayer: Participant = {
+                userId: nextPlayerId,
                 name: "next name",
                 numberOfDice: 3,
                 roll: [],
@@ -888,9 +896,9 @@ describe("game functionality", () => {
                 messageType: MessageType.RoundStarted,
                 message: {
                     participant:{
-                        userId: "notPlayerId"
+                        userId: playerId
                     },
-                    startingPlayer: "notPlayerId"
+                    startingPlayerId: nextPlayer
                 }
             }
             gameInterface.gameMessageLog.push(lastMessage);
@@ -930,7 +938,7 @@ describe("game functionality", () => {
                     participant:{
                         userId: playerId
                     },
-                    startingPlayer: playerId
+                    startingPlayerId: playerId
                 }
             }
             gameInterface.gameMessageLog.push(lastMessage);
@@ -1038,7 +1046,7 @@ describe("game functionality", () => {
                     participant:{
                         userId: playerId
                     },
-                    startingPlayer: playerId
+                    startingPlayerId: playerId
                 }
             }
             gameInterface.gameMessageLog.push(lastMessage);
@@ -1144,7 +1152,7 @@ describe("game functionality", () => {
                     participant:{
                         userId: playerId
                     },
-                    startingPlayer: playerId
+                    startingPlayerId: playerId
                 }
             }
             gameInterface.gameMessageLog.push(lastMessage);
@@ -1190,7 +1198,7 @@ describe("game functionality", () => {
                     participant:{
                         userId: playerId
                     },
-                    startingPlayer: playerId
+                    startingPlayerId: playerId
                 }
             }
             gameInterface.gameMessageLog.push(lastMessage);

@@ -13,6 +13,7 @@ import { JoinComponent } from './join/join.component';
 import { RollComponent } from './lobby/roll/roll.component';
 import { SelectionComponent } from './lobby/selection/selection.component';
 import { ClaimComponent } from './lobby/claim/claim.component';
+import { PlayersComponent } from './lobby/players/players.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { ClaimComponent } from './lobby/claim/claim.component';
     JoinComponent,
     RollComponent,
     SelectionComponent,
-    ClaimComponent
+    ClaimComponent,
+    PlayersComponent
   ],
   imports: [
     BrowserModule,

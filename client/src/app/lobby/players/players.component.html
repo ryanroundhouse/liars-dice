@@ -1,0 +1,10 @@
+<h1>Players</h1>
+{{ selectedPlayer }}
+<ul>
+    <li *ngFor='let player of players'>
+        <div [style.background-color]="selectedPlayer === player.userId ? 'red' : ''">
+            <img src="{{'assets/img/silhouette1.png'}}"/><br/>
+            <span>{{ player.name }} - {{ player.userId }}</span>
+        </div>
+    </li>
+</ul>

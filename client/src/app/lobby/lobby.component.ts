@@ -21,8 +21,11 @@ export class LobbyComponent implements OnInit {
   yourTurn: boolean = false;
   mainMessage: string;
   dice: number[] = [];
+
   players: Participant[] = [];
   playerId: string;
+  playerTurn: string;
+
   messages: GameMessage[] = [];
   quantity: number;
   value: number;
@@ -119,7 +122,8 @@ export class LobbyComponent implements OnInit {
   processRoundStarted(roundSetup: RoundSetup) {
     this.dice = roundSetup.participant.roll;
     this.minQuantity = 1;
-    if (roundSetup.startingPlayer) {
+    this.playerTurn = roundSetup.startingPlayerId;
+    if (this.playerTurn === this.playerId) {
       this.yourTurn = true;
       this.mainMessage = "It's your turn.  Make a claim.";
     }
@@ -137,8 +141,8 @@ export class LobbyComponent implements OnInit {
     }
 
     this.lastClaim = claim;
-
-    if (claim.nextPlayerId === this.playerId) {
+    this.playerTurn = claim.nextPlayerId;
+    if (this.playerTurn === this.playerId) {
       message += "your turn.";
       this.yourTurn = true;
     }
