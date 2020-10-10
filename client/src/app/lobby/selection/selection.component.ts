@@ -1,5 +1,6 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { Claim } from '@ryanroundhouse/liars-dice-interface';
+import { faPlus, faMinus, faArrowUp, faArrowDown, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'liar-selection',
@@ -12,6 +13,10 @@ export class SelectionComponent implements OnInit, OnChanges {
   quantity: number = 3;
   value: number = 3;
   dice: number[] = [];
+  faPlus: IconDefinition = faPlus;
+  faMinus: IconDefinition = faMinus;
+  faArrowUp: IconDefinition = faArrowUp;
+  faArrowDown: IconDefinition = faArrowDown;
   
   constructor() { }
 

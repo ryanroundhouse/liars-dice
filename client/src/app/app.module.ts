@@ -14,6 +14,7 @@ import { RollComponent } from './lobby/roll/roll.component';
 import { SelectionComponent } from './lobby/selection/selection.component';
 import { ClaimComponent } from './lobby/claim/claim.component';
 import { PlayersComponent } from './lobby/players/players.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @NgModule({
   declarations: [
@@ -29,7 +30,8 @@ import { PlayersComponent } from './lobby/players/players.component';
     BrowserModule,
     HttpClientModule,
     AppRoutingModule,
-    FormsModule
+    FormsModule,
+    FontAwesomeModule
   ],
   providers: [{
     provide: HTTP_INTERCEPTORS,

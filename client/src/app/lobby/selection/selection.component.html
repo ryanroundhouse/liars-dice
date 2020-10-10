@@ -1,13 +1,20 @@
-<button (click)="onClickUp()">up</button>
-<button (click)="onClickLess()">less</button>
-<ul>
-    <li *ngFor="let in of dice">
-        <img src="{{'assets/img/dice/' + value + '.png'}}"/>
-    </li>
-</ul>
-<button (click)="onClickMore()">more</button>
-<button (click)="onClickDown()">down</button>
-<br/>
-<button (click)="onClickClaim()">Make Claim</button>
-<button (click)="onClickCheat()">Cheat!</button>
-<button (click)="onClickBangOn()">Bang on</button>
+<div class="parent">
+    <div class="d-flex justify-content-center">
+        <button class="px-5" (click)="onClickUp()"><fa-icon [icon]="faArrowUp" size="2x"></fa-icon></button>
+    </div>
+    <div class="d-flex justify-content-center">
+        <button class="mr-3" (click)="onClickLess()"><fa-icon [icon]="faMinus" size="2x"></fa-icon></button>
+        <div *ngFor="let in of dice">
+            <img src="{{'assets/img/dice/' + value + '.png'}}"/>
+        </div>
+        <button class="ml-3" (click)="onClickMore()"><fa-icon [icon]="faPlus" size="2x"></fa-icon></button>
+    </div>
+    <div class="d-flex justify-content-center">
+        <button class="px-5" id="downButton" (click)="onClickDown()"><fa-icon [icon]="faArrowDown" size="2x"></fa-icon></button>
+    </div>
+</div>
+<div class="d-flex justify-content-center mt-4">
+    <button class="mx-5" (click)="onClickCheat()">Cheat!</button>
+    <button class="mx-5" (click)="onClickClaim()">Make Claim</button>
+    <button class="mx-5" (click)="onClickBangOn()">Bang on</button>
+</div>
