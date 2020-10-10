@@ -1,10 +1,8 @@
 <h1>Players</h1>
-<ul>
-    <li *ngFor='let player of players'>
-        <div [className]="selectedPlayer === player.userId ? 'selected' : ''">
-            <img src="{{'assets/img/silhouette1.png'}}"/><br/>
-            <span *ngIf="!claim || (claim && claim.playerId !== player.userId)">{{ player.name }}</span>
-            <liar-claim *ngIf="claim && claim.playerId === player.userId" [claim]="claim" [players]="players" [playerId]="playerId"></liar-claim>
-        </div>
-    </li>
-</ul>
+<div class="parent">
+    <div *ngFor='let player of players' [className]="selectedPlayer === player.userId ? 'selected' : ''">
+        <img src="{{'assets/img/silhouette1.png'}}"/><br/>
+        <span *ngIf="!claim || (claim && claim.playerId !== player.userId)">{{ player.name }}</span>
+        <liar-claim *ngIf="claim && claim.playerId === player.userId" [claim]="claim" [players]="players" [playerId]="playerId"></liar-claim>
+    </div>
+</div>

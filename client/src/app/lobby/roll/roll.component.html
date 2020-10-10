@@ -1,5 +1,8 @@
-<ul>
-    <li *ngFor="let die of dice">
-        <img src="{{'assets/img/dice/' + die + '.png'}}"/>
-    </li>
-</ul>
+<div class="parent">
+    <p>Your roll</p>
+    <ul>
+        <li *ngFor="let die of dice">
+            <img src="{{'assets/img/dice/' + die + '.png'}}"/>
+        </li>
+    </ul>
+</div>

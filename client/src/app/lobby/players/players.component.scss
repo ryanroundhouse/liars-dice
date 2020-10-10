@@ -1,5 +1,14 @@
-ul {
-    list-style-type: none;
+.parent{
+    display: grid;
+    grid-gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    text-align: center;
+}
+
+img{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .selected{
