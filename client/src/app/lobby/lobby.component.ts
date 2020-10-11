@@ -3,7 +3,7 @@ import { Queue } from 'queue-typescript';
 import { LobbyService } from '../services/lobby.service';
 
 import { ServerMessageService } from '../services/server-message.service';
-import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults, UiGameMessage, GameOver } from '@ryanroundhouse/liars-dice-interface';
+import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults, UiGameMessage, GameOver, NameChange } from '@ryanroundhouse/liars-dice-interface';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
@@ -83,6 +83,17 @@ export class LobbyComponent implements OnInit {
     inputElement.select();
     document.execCommand('copy');
     inputElement.setSelectionRange(0, 0);
+  }
+
+  onClickSetName(userName: string){
+    if (userName.length <= 0){
+      console.log(`can't set username to blank value`);
+      return;
+    }
+    console.log(`setting username to ${userName}`);
+    this.lobbyService.setName(this.gameId, userName).subscribe(
+      next => console.log(`username updated successfully`), 
+      error => console.error(`username update failed: ${JSON.stringify(error)}`));
   }
 
   onClickLogout() {
@@ -209,6 +220,9 @@ export class LobbyComponent implements OnInit {
           this.processGameOver(uiGameMessage.gameMessage.message as GameOver);
           break;
         }
+        case MessageType.NameChangeMessage: {
+          this.processNameChange(uiGameMessage.gameMessage.message as NameChange);
+        }
       }
       setTimeout(() => {
         // console.log("timeout expired.");
@@ -218,6 +232,18 @@ export class LobbyComponent implements OnInit {
     else {
       console.log('no more messages to process.  clearing slowdown.');
       this.slowDown = false;
+    }
+  }
+  processNameChange(nameChange: NameChange) {
+    console.log(`processing name change event: ${JSON.stringify(nameChange)}`);
+    let player = this.players.find(player => player.userId === nameChange.playerId);
+    let nameChangeMessage: string;
+    if (!player){
+      console.error(`player not found.`);
+    }
+    else{
+      this.mainMessage = `${player.name} changed their name to ${nameChange.name}`;
+      player.name = nameChange.name;
     }
   }
 

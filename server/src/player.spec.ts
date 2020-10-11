@@ -55,7 +55,7 @@ describe("player functionality", () => {
             const gamePopulation = new Map<string, GameInterface>();
             const participant: Participant = {
                 userId: playerId,
-                name: name,
+                name,
                 numberOfDice: 5,
                 roll: null,
                 eliminated: false
@@ -79,7 +79,7 @@ describe("player functionality", () => {
             const gamePopulation = new Map<string, GameInterface>();
             const participant: Participant = {
                 userId: "not playerId",
-                name: name,
+                name,
                 numberOfDice: 5,
                 roll: null,
                 eliminated: false
@@ -103,7 +103,7 @@ describe("player functionality", () => {
             const gamePopulation = new Map<string, GameInterface>();
             const participant: Participant = {
                 userId: "not playerId",
-                name: name,
+                name,
                 numberOfDice: 5,
                 roll: null,
                 eliminated: false
@@ -130,7 +130,7 @@ describe("player functionality", () => {
             const gamePopulation = new Map<string, GameInterface>();
             const participant: Participant = {
                 userId: playerId,
-                name: name,
+                name,
                 numberOfDice: 5,
                 roll: null,
                 eliminated: false
@@ -160,7 +160,7 @@ describe("player functionality", () => {
             const gamePopulation = new Map<string, GameInterface>();
             const participant: Participant = {
                 userId: playerId,
-                name: name,
+                name,
                 numberOfDice: 5,
                 roll: null,
                 eliminated: false,

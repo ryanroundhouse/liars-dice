@@ -13,9 +13,8 @@
     <br/><br/>
     <div *ngIf="gameId">
         <input type="text" id="gameIdBox" [(ngModel)]="joinLink" #userinput><button (click)="onClickCopyGameLink(userinput)" >Copy Link</button>
+        <input type="text" id="nameBox" [(ngModel)]="name" #userName><button (click)="onClickSetName(userName.value)">Set Name</button>
     </div>
-    <br/>
-    <input type="text" id="nameBox" [(ngModel)]="name">
     <br/>
     <button (click)="onClickStartGame()">Start Game</button>
 </div>

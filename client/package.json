@@ -22,7 +22,6 @@
     "@fortawesome/angular-fontawesome": "^0.7.0",
     "@fortawesome/fontawesome-svg-core": "^1.2.32",
     "@fortawesome/free-solid-svg-icons": "^5.15.1",
-    "@ryanroundhouse/liars-dice-interface": "file:../liars-dice-interface",
     "bootstrap": "^4.5.2",
     "queue-typescript": "^1.0.1",
     "rxjs": "~6.5.5",

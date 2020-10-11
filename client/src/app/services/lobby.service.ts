@@ -34,6 +34,10 @@ export class LobbyService {
     return this.http.post<LiarInterface.Result<LiarInterface.Participant[]>>(`http://localhost:3000/game/${gameId}/join`, { name: name }, {withCredentials: true});
   }
 
+  setName(gameId: string, name: string): Observable<LiarInterface.Result<string>>{
+    return this.http.put<LiarInterface.Result<string>>(`http://localhost:3000/player`, { name: name, gameId: gameId}, {withCredentials: true});
+  }
+
   claim(gameId: string, quantity: number, value: number, bangOn: boolean, cheat: boolean): Observable<LiarInterface.Result<string>>{
     const claim: LiarInterface.Claim = {
       quantity: quantity,

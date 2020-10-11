@@ -41,6 +41,6 @@ app.post('/game/:gameId/join', gameController.joinGame);
 app.get('/game/:gameId/start', gameController.startGame);
 app.get('/game/:gameId/', gameController.getGameState);
 app.post('/game/:gameId/claim', gameController.claim);
-app.put('/player/:playerId', playerController.updatePlayer);
+app.put('/player', playerController.updatePlayer);
 
 export default app;
