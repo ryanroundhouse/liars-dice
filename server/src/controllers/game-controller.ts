@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import logger from "../logger";
 import { v4 as uuidv4 } from 'uuid';
 import messenger from "../messenger";
-import { GameMessage, Result } from "@ryanroundhouse/liars-dice-interface";
+import { GameMessage, Result, Login } from "@ryanroundhouse/liars-dice-interface";
 import game from "../service/game-service";
 import gamePopulation from "../service/game-population";
 
@@ -35,23 +35,35 @@ export function createGame(req: Request, res: Response){
 export function login(req: Request, res: Response){
     // send error if the user is already logged in
     logger.debug(`session set to ${req.session.userId}`);
+    let userId: string;
+    let gameId: string;
     if (req.session.userId != null){
-        const alreadyLoggedInResult: Result<string> = {
-            ok: true,
-            value: req.session.userId
-        };
-        res.send(alreadyLoggedInResult);
-        return;
+        logger.log(`info`, `user ${userId} already logged in.`);
+        userId = req.session.userId;
+        const gameFindResult = game.findGameWithPlayer(userId, gamePopulation);
+        if (gameFindResult.ok){
+            gameId = gameFindResult.value;
+        }
+        else{
+            res.send(gameFindResult);
+            return;
+        }
     }
-    // create set visitor's session
-    const id = uuidv4();
-    logger.log('info', `Setting session for user ${id}`);
-    req.session.userId = id;
-    const newLoginResult: Result<string> = {
+    else{
+        // create set visitor's session
+        userId = uuidv4();
+        logger.log('info', `Setting session for user ${userId}`);
+        req.session.userId = userId;
+    }
+    const loginResult: Result<Login> = {
         ok: true,
-        value: id
+        value: {
+            userId,
+            gameId,
+        }
     };
-    res.send(newLoginResult);
+    res.send(loginResult);
+    return;
 }
 
 /**

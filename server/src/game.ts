@@ -57,6 +57,9 @@ export class Game{
         if (!existingGame){
             return { ok: false, message: ErrorMessage.GameNotFound };
         }
+        if (existingGame.started){
+            return { ok: false, message: ErrorMessage.GameAlreadyStarted };
+        }
         let alreadyInGame = false;
         gamePopulation.forEach((selectedGame: GameInterface) => {
             if (typeof selectedGame.participants.find(selectedParticipant => selectedParticipant.userId === userId && selectedParticipant.eliminated === false) !== "undefined"){
@@ -143,6 +146,26 @@ export class Game{
         existingGame.started = true;
         this.messenger.sendGameMessageToAll(gameId, MessageType.GameStarted, null, gamePopulation);
         return { ok: true, value: gameId };
+    }
+
+    findGameWithPlayer(playerId: string, gamePopulation: Map<string, GameInterface>): Result<string>{
+        if (!playerId){
+            return {ok:false, message: ErrorMessage.NoUserIDProvided };
+        }
+        if (!gamePopulation){
+            return {ok:false, message: ErrorMessage.NoGamePopulationProvided };
+        }
+        let foundGameId: string;
+        gamePopulation.forEach((gamePop, gameId) => {
+            if (!gamePop.finished && gamePop.participants.find(participant => participant.userId === playerId)){
+                foundGameId = gameId;
+            }
+        });
+        const result: Result<string> = {
+            ok: true,
+            value: foundGameId,
+        }
+        return result;
     }
 
     calculateStartingPlayer(game: GameInterface): Result<Participant>{

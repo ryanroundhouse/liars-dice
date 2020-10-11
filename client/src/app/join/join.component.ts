@@ -14,6 +14,7 @@ export class JoinComponent implements OnInit {
   constructor(private lobbyService: LobbyService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit(): void {
+    console.log(`in join`);
     this.gameId = this.route.snapshot.params['gameId'];
     this.lobbyService.login().subscribe(next => {
       console.log(`login result: ${JSON.stringify(next)}`);

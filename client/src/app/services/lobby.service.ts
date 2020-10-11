@@ -10,8 +10,8 @@ export class LobbyService {
 
   constructor(private http: HttpClient) { }
 
-  login(): Observable<LiarInterface.Result<string>>{
-    return this.http.get<LiarInterface.Result<string>>('http://localhost:3000/login', {withCredentials: true});
+  login(): Observable<LiarInterface.Result<LiarInterface.Login>>{
+    return this.http.get<LiarInterface.Result<LiarInterface.Login>>('http://localhost:3000/login', {withCredentials: true});
   }
 
   logout(): Observable<LiarInterface.Result<string>>{

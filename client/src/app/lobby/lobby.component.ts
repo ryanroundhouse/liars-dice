@@ -37,24 +37,25 @@ export class LobbyComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.setGameId(this.route.snapshot.params['gameId']);
+    // this.setGameId(this.route.snapshot.params['gameId']);
     if (!this.playerId) {
       this.lobbyService.login().subscribe(next => {
         console.log(next);
-        this.playerId = next.value;
+        this.playerId = next.value.userId;
         this.loggedIn = true;
         this.slowDown = false;
         this.messageService.connect().subscribe(next => this.processGameMessage(next, 0), error => console.error(`error when subscribing to messages: ${console.error}`));
+        if (next.value.gameId) {
+          this.gameId = next.value.gameId;
+          this.lobbyService.getGameState(this.gameId).subscribe(next => {
+            const messages = next.value;
+            messages.forEach(message => { this.processGameMessage(message, 0) });
+          },
+            error => console.error(`error fetching game state: ${error}`)
+          )
+        }
       },
         error => console.log(`got a login error: ${error.error.message}`));
-    }
-    if (this.gameId) {
-      this.lobbyService.getGameState(this.gameId).subscribe(next => {
-        const messages = next.value;
-        messages.forEach(message => { this.processGameMessage(message, 0) });
-      },
-        error => console.error(`error fetching game state: ${error}`)
-      )
     }
   }
 

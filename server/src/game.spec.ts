@@ -156,6 +156,28 @@ describe("game functionality", () => {
             result.ok.should.be.false;
             result.message.should.equal(ErrorMessage.CantJoinGameWhenInRunningGame);
         });
+        it("can't join game if game already started", () => {
+            const playerId: string = "test";
+            const participant: Participant = {
+                userId: playerId,
+                name: "not test player",
+                numberOfDice: 5,
+                roll: [],
+                eliminated: false
+            }
+            const game: Game = new Game(new Messenger());
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const gameWithPlayer: GameInterface = {
+                started: true,
+                finished: false,
+                participants: [],
+                gameMessageLog: []
+            }
+            gamePopulation.set("gameId", gameWithPlayer);
+            const result: Result<Participant[]> = game.joinGame(playerId, "gameId", "name", gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.GameAlreadyStarted);
+        });
         it("can join game if games exist, but you're not in it", () => {
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
@@ -175,6 +197,8 @@ describe("game functionality", () => {
             expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
         });
         it("can join game if games exist, participant in another game, but game is finished", () => {
+            const finishedGameId = "finishedGameId";
+            const newGameId = "newGameId";
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
@@ -188,14 +212,21 @@ describe("game functionality", () => {
             }
             const game: Game = new Game(messengerStub);
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const gameWithPlayer: GameInterface = {
+            const finishedGameWithPlayer: GameInterface = {
                 started: true,
                 finished: true,
                 participants: [participant],
                 gameMessageLog: []
             }
-            gamePopulation.set("gameId", gameWithPlayer);
-            const result: Result<Participant[]> = game.joinGame(playerId, "gameId", "name", gamePopulation);
+            const gameWithoutPlayer: GameInterface = {
+                started: false,
+                finished: false,
+                participants: [],
+                gameMessageLog: [],
+            }
+            gamePopulation.set(finishedGameId, finishedGameWithPlayer);
+            gamePopulation.set(newGameId, gameWithoutPlayer);
+            const result: Result<Participant[]> = game.joinGame(playerId, newGameId, "name", gamePopulation);
             result.ok.should.be.true;
             expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
         });
@@ -225,6 +256,8 @@ describe("game functionality", () => {
             expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
         });
         it("can join game if games exist, but player was already eliminated from their game", () => {
+            const eliminatedGameId = "eliminatedGameId";
+            const newGameId = "newGameId";
             const messenger = new Messenger();
             const messengerStub = sinon.stub(messenger);
             messengerStub.sendGameMessageToAll.returns({ok: true});
@@ -238,14 +271,21 @@ describe("game functionality", () => {
             }
             const game: Game = new Game(messengerStub);
             const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
-            const gameWithPlayer: GameInterface = {
+            const gameWithPlayerEliminated: GameInterface = {
                 started: true,
                 finished: false,
                 participants: [participant],
                 gameMessageLog: []
             }
-            gamePopulation.set("gameId", gameWithPlayer);
-            const result: Result<Participant[]> = game.joinGame(playerId, "gameId", "name", gamePopulation);
+            const gameWithoutPlayer: GameInterface = {
+                started: false,
+                finished: false,
+                participants: [],
+                gameMessageLog: [],
+            }
+            gamePopulation.set(eliminatedGameId, gameWithPlayerEliminated);
+            gamePopulation.set(newGameId, gameWithoutPlayer);
+            const result: Result<Participant[]> = game.joinGame(playerId, newGameId, "name", gamePopulation);
             result.ok.should.be.true;
             expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
         });

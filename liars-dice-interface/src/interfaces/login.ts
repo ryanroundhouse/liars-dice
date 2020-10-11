@@ -1,4 +1,4 @@
 export interface Login{
-    result: string,
-    message: string
+    userId: string,
+    gameId?: string
 }
