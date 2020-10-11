@@ -46,7 +46,7 @@ export class LobbyComponent implements OnInit {
         this.slowDown = false;
         this.messageService.connect().subscribe(next => this.processGameMessage(next, 0), error => console.error(`error when subscribing to messages: ${console.error}`));
         if (next.value.gameId) {
-          this.gameId = next.value.gameId;
+          this.setGameId(next.value.gameId);
           this.lobbyService.getGameState(this.gameId).subscribe(next => {
             const messages = next.value;
             messages.forEach(message => { this.processGameMessage(message, 0) });

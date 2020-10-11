@@ -33,4 +33,7 @@ export class JoinComponent implements OnInit {
     });
   }
 
+  onClickGoToLobby(){
+    this.router.navigate(['/']);
+  }
 }
