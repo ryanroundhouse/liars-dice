@@ -4,8 +4,10 @@
     <p *ngIf="gameId">Game: {{ gameId }}</p>
     <br/>
 </div> -->
-<button (click)="onClickLogout()">Logout</button>
-<br/><br/>
+<div *ngIf="gameId">
+    <button (click)="onClickLogout()">Logout</button>
+    <br/><br/>
+</div>
 <div *ngIf="!gameId">
     <button (click)="onClickCreateGame()">Create Game</button>
 </div>
