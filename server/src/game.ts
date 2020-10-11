@@ -1,13 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Messenger } from "./messenger";
 import logger from "./logger";
 import { GameInterface, Participant, RoundSetup, RoundResults, GameMessage, Claim, GameOver, MessageType, Result } from "@ryanroundhouse/liars-dice-interface"
 import { ErrorMessage } from "./enums/errorMessage";
-import { exit } from 'shelljs';
+import { Messenger } from './messenger';
 
 export class Game{
-    static gamePopulation = new Map<string, GameInterface>();
-
     // need this to be the singleton messenger!
     constructor(private messenger: Messenger){}
 
@@ -350,7 +347,7 @@ export class Game{
         currentClaim.message.nextPlayerId = nextPlayer.userId;
         currentClaim.message.playerId = playerId;
         logger.verbose(`gamePopulation is now:`);
-        Game.gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
+        gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
         const result = this.messenger.sendGameMessageToAll(gameId, MessageType.Claim, currentClaim.message, gamePopulation);
         return result;
     }
@@ -412,7 +409,7 @@ export class Game{
             }
         }
         logger.verbose(`gamePopulation is now:`);
-        Game.gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
+        gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
         this.messenger.sendGameMessageToAll(gameId, MessageType.RoundResults, roundResults, gamePopulation);
         const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
         if (activePlayers.length === 1){
@@ -423,7 +420,7 @@ export class Game{
             existingGame.finished = true;
         }
         else{
-            const result = this.startRound(gameId, Game.gamePopulation);
+            const result = this.startRound(gameId, gamePopulation);
             if (!result.ok){
                 return result;
             }
@@ -486,7 +483,7 @@ export class Game{
             }
         }
         logger.verbose(`gamePopulation is now:`);
-        Game.gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
+        gamePopulation.forEach((val, key) => logger.verbose(`${key}: ${JSON.stringify(val)}`));
         this.messenger.sendGameMessageToAll(gameId, MessageType.RoundResults, roundResults, gamePopulation);
         const activePlayers = existingGame.participants.filter(participant => !participant.eliminated);
         if (activePlayers.length === 1){
@@ -497,7 +494,7 @@ export class Game{
             existingGame.finished = true;
         }
         else{
-            const result = this.startRound(gameId, Game.gamePopulation);
+            const result = this.startRound(gameId, gamePopulation);
             if (!result.ok){
                 return result;
             }

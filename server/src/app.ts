@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import path from "path";
 import sessionParser from "./session-parser";
 import * as gameController from "./controllers/game-controller";
+import * as playerController from "./controllers/player-controller";
 
 // Create Express server
 const app = express();
@@ -40,5 +41,6 @@ app.post('/game/:gameId/join', gameController.joinGame);
 app.get('/game/:gameId/start', gameController.startGame);
 app.get('/game/:gameId/', gameController.getGameState);
 app.post('/game/:gameId/claim', gameController.claim);
+app.put('/player/:playerId', playerController.updatePlayer);
 
 export default app;

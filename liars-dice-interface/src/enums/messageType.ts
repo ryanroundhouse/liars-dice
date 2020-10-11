@@ -4,5 +4,6 @@ export enum MessageType {
     RoundStarted = 2,
     Claim = 3,
     RoundResults = 4,
-    GameOver = 5
+    GameOver = 5,
+    NameChangeMessage = 6,
 }

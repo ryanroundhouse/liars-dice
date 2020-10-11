@@ -9,6 +9,7 @@ import { RoundSetup } from "./interfaces/round-setup";
 import { MessageType } from "./enums/messageType";
 import { Result } from "./types/result";
 import { UiGameMessage } from "./interfaces/ui-game-message";
+import { NameChange } from "./interfaces/name-change";
 
 export {Claim};
 export {GameInterface};
@@ -21,3 +22,4 @@ export {RoundSetup};
 export {MessageType};
 export {Result};
 export {UiGameMessage};
+export {NameChange};

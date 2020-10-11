@@ -1,8 +1,7 @@
 import { ErrorMessage } from "./enums/errorMessage";
-import { MessageType } from "./enums/messageType";
 import WebSocket from "ws";
 import logger from "./logger";
-import { GameInterface, GameMessage, Participant, Result } from "@ryanroundhouse/liars-dice-interface";
+import { GameInterface, GameMessage, MessageType, Participant, Result } from "@ryanroundhouse/liars-dice-interface";
 
 export class Messenger{
     wsConnections = new Map<string, WebSocket>();

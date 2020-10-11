@@ -1,11 +1,10 @@
 import { Request, Response } from "express";
 import logger from "../logger";
-import { Game } from "../game";
 import { v4 as uuidv4 } from 'uuid';
 import messenger from "../messenger";
-import { Participant, GameMessage, Result } from "@ryanroundhouse/liars-dice-interface";
-
-const game: Game = new Game(messenger);
+import { GameMessage, Result } from "@ryanroundhouse/liars-dice-interface";
+import game from "../service/game-service";
+import gamePopulation from "../service/game-population";
 
 /**
  * Create a game.
@@ -19,7 +18,7 @@ export function createGame(req: Request, res: Response){
         logger.log('info', `user tried to create a game before logging in.`);
         return;
     }
-    const result = game.createGame(userId, Game.gamePopulation);
+    const result = game.createGame(userId, gamePopulation);
     if (!result.ok){
         res.status(400).send(result);
         return;
@@ -90,7 +89,7 @@ export function joinGame(req: Request, res: Response){
     const gameId = req.params.gameId;
     const name = req.body.name;
 
-    const result = game.joinGame(userId, gameId, name, Game.gamePopulation);
+    const result = game.joinGame(userId, gameId, name, gamePopulation);
     if (!result.ok){
         res.status(400).send(result);
         return;
@@ -112,14 +111,14 @@ export function startGame(req: Request, res: Response){
     }
     logger.log('info', `got request to start ${gameId} from ${userId}`);
 
-    const result = game.startGame(userId, gameId, Game.gamePopulation);
+    const result = game.startGame(userId, gameId, gamePopulation);
     if (!result.ok){
         res.status(400).send(result);
         return;
     }
 
     res.send(result);
-    game.startRound(gameId, Game.gamePopulation);
+    game.startRound(gameId, gamePopulation);
 }
 
 /**
@@ -136,7 +135,7 @@ export function getGameState(req: Request, res: Response){
     }
     logger.log('info', `got request for ${gameId} game state from ${userId}`);
 
-    const result = game.getGameState(userId, gameId, Game.gamePopulation);
+    const result = game.getGameState(userId, gameId, gamePopulation);
     if (!result.ok){
         res.status(400).send(result);
         return;
@@ -157,7 +156,7 @@ export function claim(req: Request, res: Response){
         return;
     }
     const currentClaim: GameMessage = req.body;
-    const result = game.processClaim(gameId, req.session.userId, currentClaim, Game.gamePopulation);
+    const result = game.processClaim(gameId, req.session.userId, currentClaim, gamePopulation);
     if (!result.ok){
         res.status(400).send(result);
         return;

@@ -25,4 +25,5 @@ export enum ErrorMessage{
     GameNotStarted = "game not started",
     GameAlreadyFinished = "game already finished.",
     MustHaveTwoOrMorePlayers = "must have 2 or more players.",
+    PlayerNotFound = "player not found.",
 }

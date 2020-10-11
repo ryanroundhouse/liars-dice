@@ -6,11 +6,10 @@ import chai, { expect, assert } from "chai";
 import { Game } from "./game";
 import { Messenger } from "./messenger";
 import { ErrorMessage } from "./enums/errorMessage";
-import { MessageType } from "./enums/messageType";
 import sinon from "sinon";
 import logger from './logger';
 import WebSocket from "ws";
-import { GameInterface, Participant, GameMessage, Claim, RoundResults, GameOver, Result } from "@ryanroundhouse/liars-dice-interface";
+import { GameInterface, Participant, GameMessage, Claim, RoundResults, GameOver, Result, MessageType } from "@ryanroundhouse/liars-dice-interface";
 
 logger.silent = true;
 
