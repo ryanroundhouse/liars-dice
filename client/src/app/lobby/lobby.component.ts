@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Queue } from 'queue-typescript';
 import { LobbyService } from '../services/lobby.service';
+import { NameGeneratorService } from '../services/name-generator.service';
 
 import { ServerMessageService } from '../services/server-message.service';
 import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults, UiGameMessage, GameOver, NameChange } from '@ryanroundhouse/liars-dice-interface';
@@ -15,7 +16,7 @@ export class LobbyComponent implements OnInit {
   loggedIn: boolean = false;
   gameId: string;
   joinLink: string;
-  name: string = 'bob';
+  name: string;
   minQuantity: number = 1;
   gameStarted: boolean = false;
   yourTurn: boolean = false;
@@ -33,15 +34,18 @@ export class LobbyComponent implements OnInit {
   messageQueue: Queue<UiGameMessage> = new Queue<UiGameMessage>();
   slowDown: boolean = false;
 
-  constructor(private lobbyService: LobbyService, private messageService: ServerMessageService, private route: ActivatedRoute) {
+  constructor(private lobbyService: LobbyService, private messageService: ServerMessageService, private nameGeneratorService: NameGeneratorService) {
+    this.name = nameGeneratorService.generateName();
   }
 
   ngOnInit(): void {
-    // this.setGameId(this.route.snapshot.params['gameId']);
     if (!this.playerId) {
       this.lobbyService.login().subscribe(next => {
         console.log(next);
         this.playerId = next.value.userId;
+        if (next.value.name){
+          this.name = next.value.name;
+        }
         this.loggedIn = true;
         this.slowDown = false;
         this.messageService.connect().subscribe(next => this.processGameMessage(next, 0), error => console.error(`error when subscribing to messages: ${console.error}`));

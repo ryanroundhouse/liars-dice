@@ -168,6 +168,29 @@ export class Game{
         return result;
     }
 
+    findPlayerName(playerId: string, gamePopulation: Map<string, GameInterface>): Result<string>{
+        if (!playerId){
+            return {ok:false, message: ErrorMessage.NoUserIDProvided };
+        }
+        if (!gamePopulation){
+            return {ok:false, message: ErrorMessage.NoGamePopulationProvided };
+        }
+        let foundName: string;
+        gamePopulation.forEach((gamePop, gameId) => {
+            if (!gamePop.finished && gamePop.participants.find(participant => participant.userId === playerId)){
+                const foundPlayer = gamePop.participants.find(participant => participant.userId === playerId);
+                if (foundPlayer){
+                    foundName = foundPlayer.name;
+                }
+            }
+        });
+        const result: Result<string> = {
+            ok: true,
+            value: foundName,
+        }
+        return result;
+    }
+
     calculateStartingPlayer(game: GameInterface): Result<Participant>{
         if (!game){
             return {ok:false, message: ErrorMessage.NoGameSpecified };

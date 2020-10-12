@@ -1,4 +1,5 @@
 export interface Login{
     userId: string,
-    gameId?: string
+    gameId?: string,
+    name?: string,
 }

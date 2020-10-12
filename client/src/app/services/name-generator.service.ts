@@ -1,15 +1,14 @@
 import { Injectable } from '@angular/core';
-import { Game } from "../"
 
 @Injectable({
   providedIn: 'root'
 })
 export class NameGeneratorService {
-
+  nameList: string[] = ["Maverick","Jonesy","Tex","Longarm","Logan","Mercedes","Deadeye","Doc","Patches","Snow"];
   constructor() { }
 
-  generateName(){
-    NameGeneratorService.getRandomInt(10);
+  generateName(): string{
+    return this.nameList[NameGeneratorService.getRandomInt(this.nameList.length)];
   }
 
   static getRandomInt(max: number) {

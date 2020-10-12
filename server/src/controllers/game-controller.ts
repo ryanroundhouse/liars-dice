@@ -37,6 +37,7 @@ export function login(req: Request, res: Response){
     logger.debug(`session set to ${req.session.userId}`);
     let userId: string;
     let gameId: string;
+    let name: string;
     if (req.session.userId != null){
         logger.log(`info`, `user ${userId} already logged in.`);
         userId = req.session.userId;
@@ -46,6 +47,14 @@ export function login(req: Request, res: Response){
         }
         else{
             res.send(gameFindResult);
+            return;
+        }
+        const nameResult = game.findPlayerName(userId, gamePopulation);
+        if (nameResult.ok){
+            name = nameResult.value;
+        }
+        else{
+            res.send(nameResult);
             return;
         }
     }
@@ -60,6 +69,7 @@ export function login(req: Request, res: Response){
         value: {
             userId,
             gameId,
+            name,
         }
     };
     res.send(loginResult);

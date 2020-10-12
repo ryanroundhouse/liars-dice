@@ -10,7 +10,6 @@ import sinon from "sinon";
 import logger from './logger';
 import WebSocket from "ws";
 import { GameInterface, Participant, GameMessage, Claim, RoundResults, GameOver, Result, MessageType } from "@ryanroundhouse/liars-dice-interface";
-import gamePopulation from "./service/game-population";
 
 logger.silent = true;
 
@@ -2758,6 +2757,150 @@ describe("game functionality", () => {
             const result: Result<string> = game.findGameWithPlayer(playerId, gamePopulation);
             result.ok.should.be.true;
             result.value.should.equal(gameId);
+        });
+    });
+    describe ("findPlayerName tests", () => {
+        it("findPlayerName fails when no playerId provided", () => {
+            const playerId: string = "playerId";
+            const gameId: string = "gameId";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const gameInterface: GameInterface = {
+                started: false,
+                finished: false,
+                participants: [],
+                gameMessageLog: [],
+            };
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null);
+            const result: Result<string> = game.findPlayerName(null, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoUserIDProvided);
+        });
+        it("findPlayerName fails when no gamePopulation provided", () => {
+            const playerId: string = "playerId";
+            const gameId: string = "gameId";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const gameInterface: GameInterface = {
+                started: false,
+                finished: false,
+                participants: [],
+                gameMessageLog: [],
+            };
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null);
+            const result: Result<string> = game.findPlayerName(playerId, null);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.NoGamePopulationProvided);
+        });
+        it("findPlayerName works when player is not in a game", () => {
+            const playerId: string = "playerId";
+            const gameId: string = "gameId";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const gameInterface: GameInterface = {
+                started: false,
+                finished: false,
+                participants: [],
+                gameMessageLog: [],
+            };
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null);
+            const result: Result<string> = game.findPlayerName(playerId, gamePopulation);
+            result.ok.should.be.true;
+            expect(result.value === undefined, `result should be undefined.`);
+        });
+        it("findPlayerName works when player is in a finished game only", () => {
+            const playerId: string = "playerId";
+            const gameId: string = "gameId";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const participant: Participant = {
+                userId: playerId,
+                name: "name",
+                numberOfDice: 5,
+                roll: null,
+                eliminated: false,
+            };
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: true,
+                participants: [participant],
+                gameMessageLog: [],
+            };
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null);
+            const result: Result<string> = game.findPlayerName(playerId, gamePopulation);
+            result.ok.should.be.true;
+            expect(result.value === undefined, `result should be undefined.`);
+        });
+        it("findPlayerName works when player is eliminated from an ongoing game only", () => {
+            const playerId: string = "playerId";
+            const gameId: string = "gameId";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const participant: Participant = {
+                userId: playerId,
+                name: "name",
+                numberOfDice: 5,
+                roll: null,
+                eliminated: true,
+            };
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: false,
+                participants: [participant],
+                gameMessageLog: [],
+            };
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null);
+            const result: Result<string> = game.findPlayerName(playerId, gamePopulation);
+            result.ok.should.be.true;
+            expect(result.value === undefined, `result should be undefined.`);
+        });
+        it("findPlayerName works when player is in a game that hasn't started", () => {
+            const playerId: string = "playerId";
+            const gameId: string = "gameId";
+            const name: string = "name";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const participant: Participant = {
+                userId: playerId,
+                name,
+                numberOfDice: 5,
+                roll: null,
+                eliminated: false,
+            };
+            const gameInterface: GameInterface = {
+                started: false,
+                finished: false,
+                participants: [participant],
+                gameMessageLog: [],
+            };
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null);
+            const result: Result<string> = game.findPlayerName(playerId, gamePopulation);
+            result.ok.should.be.true;
+            result.value.should.equal(name);
+        });
+        it("findPlayerName works when player is in a started game.", () => {
+            const playerId: string = "playerId";
+            const gameId: string = "gameId";
+            const name: string = "name";
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const participant: Participant = {
+                userId: playerId,
+                name,
+                numberOfDice: 5,
+                roll: null,
+                eliminated: false,
+            };
+            const gameInterface: GameInterface = {
+                started: true,
+                finished: false,
+                participants: [participant],
+                gameMessageLog: [],
+            };
+            gamePopulation.set(gameId, gameInterface);
+            const game = new Game(null);
+            const result: Result<string> = game.findPlayerName(playerId, gamePopulation);
+            result.ok.should.be.true;
+            result.value.should.equal(name);
         });
     });
 });
