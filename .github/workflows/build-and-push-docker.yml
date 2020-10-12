@@ -28,6 +28,7 @@ jobs:
         node-version: [14.x]
     env:
       server-directory: './server'
+      client-directory: './client'
       interface-directory: './liars-dice-interface'
     steps:
       - name: check out code
@@ -35,9 +36,15 @@ jobs:
       - name: get server_node_modules
         run: npm ci
         working-directory: ${{env.server-directory}}
+      - name: get client_node_modules
+        run: npm ci
+        working-directory: ${{env.client-directory}}
       - name: building server
         run: npm run build
         working-directory: ${{env.server-directory}}
+      - name: building client
+        run: npm run build
+        working-directory: ${{env.client-directory}}
       - name: build and push dockerimage
         uses: mr-smithers-excellent/docker-build-push@v4
         with:
