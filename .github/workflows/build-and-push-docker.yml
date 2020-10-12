@@ -15,7 +15,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm ci
+      - run: npm i
         working-directory: ${{env.working-directory}}
       - run: npm run test
         working-directory: ${{env.working-directory}}
@@ -31,7 +31,7 @@ jobs:
       - name: check out code
         uses: actions/checkout@v2
       - name: get node_modules
-        run: npm ci
+        run: npm i
         working-directory: ${{env.working-directory}}
       - name: building server
         run: npm run build
