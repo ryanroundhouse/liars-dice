@@ -10,8 +10,7 @@
   "scripts": {
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "postbuild": "npm test",
-    "copy-static-assets": "ts-node copyStaticAssets.ts",
-    "build": "rimraf ./dist/ && tsc && npm run copy-static-assets",
+    "build": "rimraf ./dist/ && tsc",
     "prestart": "npm run build",
     "start": "node ./dist/server.js",
     "test": "mocha -r ts-node/register src/**/*.spec.ts",

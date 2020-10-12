@@ -1,6 +1,7 @@
 FROM node:12-alpine
 
 ENV PORT 3000
+ENV ENV prod
 
 WORKDIR /usr/src/app
 
