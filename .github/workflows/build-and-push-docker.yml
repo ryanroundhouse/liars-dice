@@ -49,6 +49,7 @@ jobs:
         run: npm run build
         working-directory: ${{env.server-directory}}
       - name: build and push dockerimage
+        working-directory: ${{env.server-directory}}
         uses: mr-smithers-excellent/docker-build-push@v4
         with:
           image: ryanroundhouse/liar-server
