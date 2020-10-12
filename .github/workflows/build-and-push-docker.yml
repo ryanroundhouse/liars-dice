@@ -7,6 +7,8 @@ jobs:
     strategy:
       matrix:
         node-version: [10.x, 12.x, 14.x]
+    env:
+      working-directory: './server'
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
@@ -14,20 +16,26 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
+        working-directory: ${{env.working-directory}}
       - run: npm run test
+        working-directory: ${{env.working-directory}}
   build-and-push-docker:
     name: Build and Push docker
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [14.x]
+    env:
+      working-directory: './server'
     steps:
       - name: check out code
         uses: actions/checkout@v2
       - name: get node_modules
         run: npm ci
+        working-directory: ${{env.working-directory}}
       - name: building server
         run: npm run build
+        working-directory: ${{env.working-directory}}
       - name: build and push dockerimage
         uses: mr-smithers-excellent/docker-build-push@v4
         with:
