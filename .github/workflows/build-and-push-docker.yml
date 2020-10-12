@@ -16,11 +16,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm i
-        working-directory: ${{env.interface-directory}}
-      - run: npm run build
-        working-directory: ${{env.interface-directory}}
-      - run: npm i
+      - run: npm ci
         working-directory: ${{env.server-directory}}
       - run: npm run test
         working-directory: ${{env.server-directory}}
@@ -36,14 +32,8 @@ jobs:
     steps:
       - name: check out code
         uses: actions/checkout@v2
-      - name: get interface_node_modules
-        run: npm i
-        working-directory: ${{env.interface-directory}}
-      - name: building interface
-        run: npm run build
-        working-directory: ${{env.interface-directory}}
       - name: get server_node_modules
-        run: npm i
+        run: npm ci
         working-directory: ${{env.server-directory}}
       - name: building server
         run: npm run build

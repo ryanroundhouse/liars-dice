@@ -18,6 +18,7 @@
   ],
   "author": "rg@ryangraham.ca",
   "license": "ISC",
+  "homepage": "https://github.com/ryanroundhouse/liars-dice",
   "devDependencies": {
     "@types/node": "^14.6.2",
     "tslint": "^6.1.3",
