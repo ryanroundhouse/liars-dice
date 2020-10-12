@@ -53,6 +53,6 @@ jobs:
         with:
           image: ryanroundhouse/liar-server
           registry: docker.io
-          dockerfile: ./server/Dockerfile
+          working-directory: ${{env.server-directory}}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
