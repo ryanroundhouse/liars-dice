@@ -8,7 +8,8 @@ jobs:
       matrix:
         node-version: [10.x, 12.x, 14.x]
     env:
-      working-directory: './server'
+      server-directory: './server'
+      interface-directory: './liars-dice-interface'
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
@@ -16,9 +17,13 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm i
-        working-directory: ${{env.working-directory}}
+        working-directory: ${{env.interface-directory}}
+      - run: npm run build
+        working-directory: ${{env.interface-directory}}
+      - run: npm i
+        working-directory: ${{env.server-directory}}
       - run: npm run test
-        working-directory: ${{env.working-directory}}
+        working-directory: ${{env.server-directory}}
   build-and-push-docker:
     name: Build and Push docker
     runs-on: ubuntu-latest
@@ -26,16 +31,23 @@ jobs:
       matrix:
         node-version: [14.x]
     env:
-      working-directory: './server'
+      server-directory: './server'
+      interface-directory: './liars-dice-interface'
     steps:
       - name: check out code
         uses: actions/checkout@v2
-      - name: get node_modules
+      - name: get interface_node_modules
         run: npm i
-        working-directory: ${{env.working-directory}}
+        working-directory: ${{env.interface-directory}}
+      - name: building interface
+        run: npm run build
+        working-directory: ${{env.interface-directory}}
+      - name: get server_node_modules
+        run: npm i
+        working-directory: ${{env.server-directory}}
       - name: building server
         run: npm run build
-        working-directory: ${{env.working-directory}}
+        working-directory: ${{env.server-directory}}
       - name: build and push dockerimage
         uses: mr-smithers-excellent/docker-build-push@v4
         with:
