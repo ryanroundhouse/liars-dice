@@ -2,10 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { Queue } from 'queue-typescript';
 import { LobbyService } from '../services/lobby.service';
 import { NameGeneratorService } from '../services/name-generator.service';
+import { faClipboard, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
 import { ServerMessageService } from '../services/server-message.service';
 import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults, UiGameMessage, GameOver, NameChange } from '@ryanroundhouse/liars-dice-interface';
-import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'liar-lobby',
@@ -33,8 +33,9 @@ export class LobbyComponent implements OnInit {
   lastClaim: Claim;
   messageQueue: Queue<UiGameMessage> = new Queue<UiGameMessage>();
   slowDown: boolean = false;
+  faClipboard: IconDefinition = faClipboard;
 
-  constructor(private lobbyService: LobbyService, private messageService: ServerMessageService, private nameGeneratorService: NameGeneratorService) {
+  constructor(private lobbyService: LobbyService, private messageService: ServerMessageService, nameGeneratorService: NameGeneratorService) {
     this.name = nameGeneratorService.generateName();
   }
 

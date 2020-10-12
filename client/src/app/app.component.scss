@@ -1,0 +1,13 @@
+header {
+    grid-column: 1 / 4;
+}
+
+main {
+    grid-column: 2 / 3;
+}
+
+footer {
+    padding: 2rem;
+    text-align: center;
+    grid-column: 1 / 4;
+}

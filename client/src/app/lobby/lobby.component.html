@@ -1,39 +1,62 @@
-<!-- <div >
-    <p>Logged in: {{ loggedIn }}</p>
-    <p> slow down: {{ slowDown }}</p>
-    <p *ngIf="gameId">Game: {{ gameId }}</p>
-    <br/>
-</div> -->
-<div *ngIf="gameId">
-    <button (click)="onClickLogout()">Logout</button>
+<div class="right" *ngIf="gameId">
+    <button (click)="onClickLogout()">Leave Game</button>
     <br/><br/>
 </div>
+<!-- Splash screen -->
 <div *ngIf="!gameId">
-    <button (click)="onClickCreateGame()">Create Game</button>
+    <div class="jumbotron p-3 text-white bg-dark">
+        <div class="col-md-8 col-lg-6 px-0">
+            <h1 class="display-4 font-italic">What is Liar's Dice?</h1>
+            <p class="lead my-3">Liar's dice is a game that requires the ability to deceive and to detect your opponent's deception.</p>
+            <button (click)="onClickCreateGame()">Create Game</button>
+        </div>
+    </div>
+    <h2>How do I play?</h2>
+    <p>The goal of the game is to outlast your opponents.</p>
+    <p>Each player starts with 5 dice.</p>
+    <p>At the start of the round, all players roll their dice.</p>
+    <p>The first player makes a claim "I have 2 6s".</p>
+    <p>Play continues to the next player who has 3 options:</p>
+    <ul>
+        <li>Claim they have a greater quantity of any value "I have 3 2s"</li>
+        <li>Call cheat on the claimer "I don't think you DO have 2 6s"</li>
+        <li>Call bang-on on the claimer "I think you have EXACTLY 2 6s"</li>
+    </ul>
+    <p>Calling cheat or bang-on ends the round with a resolution.</p>
+    <ul>
+        <li>If you call cheat and they were lying, they lose a die.</li>
+        <li>If you call cheat and they were telling the truth, you lose a die.</li>
+        <li>If you call bang-on and they were telling the truth, they lose two dice.</li>
+        <li>If you call bang-on and they were lying the truth, you lose two dice.</li>
+    </ul>
+    <p>When you run out of dice, you're eliminated.</p>
 </div>
-<div *ngIf="gameId && !gameStarted">
-    <br/><br/>
-    <div *ngIf="gameId">
-        <input type="text" id="gameIdBox" [(ngModel)]="joinLink" #userinput readonly><button (click)="onClickCopyGameLink(userinput)" >Copy Link</button>
-        <input type="text" id="nameBox" [(ngModel)]="name" #userName><button (click)="onClickSetName(userName.value)">Set Name</button>
+<!-- Game screen -->
+<div *ngIf="gameId">
+    <div *ngIf="!gameStarted">
+        <br/><br/>
+        <div *ngIf="gameId">
+            <input type="text" id="gameIdBox" [(ngModel)]="joinLink" #userinput readonly><button (click)="onClickCopyGameLink(userinput)"><fa-icon [icon]="faClipboard"></fa-icon></button><br/>
+            <input type="text" id="nameBox" [(ngModel)]="name" #userName><button (click)="onClickSetName(userName.value)">Set Name</button>
+        </div>
+        <br/>
+        <button (click)="onClickStartGame()">Start Game</button>
+    </div>
+    <p>{{ mainMessage }}</p>
+    <div *ngIf="players.length > 0">
+        <liar-players [playerId]="playerId" [selectedPlayer]="playerTurn" [claim]="lastClaim" [players]="players" ></liar-players>
     </div>
     <br/>
-    <button (click)="onClickStartGame()">Start Game</button>
+    <br/>
+    <div *ngIf="gameStarted">
+        <liar-roll [dice]="dice"></liar-roll>
+        <liar-selection *ngIf="yourTurn" [minQuantity]="minQuantity" (claim)="onClaim($event)"></liar-selection><br/><br/>
+    </div>
+    <br/>
+    <br/>
+    <ul>
+        <li *ngFor='let message of messages'>
+            {{ message.messageType }} - {{ message.message | json }}
+        </li>
+    </ul>
 </div>
-<p>{{ mainMessage }}</p>
-<div *ngIf="players.length > 0">
-    <liar-players [playerId]="playerId" [selectedPlayer]="playerTurn" [claim]="lastClaim" [players]="players" ></liar-players>
-</div>
-<br/>
-<br/>
-<div *ngIf="gameStarted">
-    <liar-roll [dice]="dice"></liar-roll>
-    <liar-selection *ngIf="yourTurn" [minQuantity]="minQuantity" (claim)="onClaim($event)"></liar-selection><br/><br/>
-</div>
-<br/>
-<br/>
-<ul>
-    <li *ngFor='let message of messages'>
-        {{ message.messageType }} - {{ message.message | json }}
-    </li>
-</ul>
