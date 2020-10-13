@@ -70,7 +70,8 @@ export class LobbyComponent implements OnInit {
       this.joinLink = null;
     }
     else {
-      this.joinLink = `http://localhost:4201/join/${newGameId}`;
+      
+      this.joinLink = `http://${window.location.host}/join/${newGameId}`;
     }
   }
 
