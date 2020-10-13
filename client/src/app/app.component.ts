@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import { faTwitter, faLinkedin, faGithub } from '@fortawesome/free-brands-svg-icons';
+import { faTwitter, faLinkedin, faGithub, faDocker } from '@fortawesome/free-brands-svg-icons';
 
 @Component({
   selector: 'app-root',
@@ -12,4 +12,5 @@ export class AppComponent {
   faTwitter: IconDefinition = faTwitter;
   faLinkedIn: IconDefinition = faLinkedin;
   faGithub: IconDefinition = faGithub;
+  faDocker: IconDefinition = faDocker;
 }

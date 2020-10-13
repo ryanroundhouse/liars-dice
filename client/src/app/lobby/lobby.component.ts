@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Queue } from 'queue-typescript';
 import { LobbyService } from '../services/lobby.service';
 import { NameGeneratorService } from '../services/name-generator.service';
-import { faClipboard, IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { faClipboard, faSignOutAlt, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
 import { ServerMessageService } from '../services/server-message.service';
 import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults, UiGameMessage, GameOver, NameChange } from '@ryanroundhouse/liars-dice-interface';
@@ -22,6 +22,7 @@ export class LobbyComponent implements OnInit {
   yourTurn: boolean = false;
   mainMessage: string;
   dice: number[] = [];
+  debug: boolean = false;
 
   players: Participant[] = [];
   playerId: string;
@@ -34,6 +35,7 @@ export class LobbyComponent implements OnInit {
   messageQueue: Queue<UiGameMessage> = new Queue<UiGameMessage>();
   slowDown: boolean = false;
   faClipboard: IconDefinition = faClipboard;
+  faSignOutAlt: IconDefinition = faSignOutAlt;
 
   constructor(private lobbyService: LobbyService, private messageService: ServerMessageService, nameGeneratorService: NameGeneratorService) {
     this.name = nameGeneratorService.generateName();
