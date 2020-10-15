@@ -6,6 +6,7 @@ import { faClipboard, faSignOutAlt, IconDefinition } from '@fortawesome/free-sol
 
 import { ServerMessageService } from '../services/server-message.service';
 import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults, UiGameMessage, GameOver, NameChange } from '@ryanroundhouse/liars-dice-interface';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'liar-lobby',
@@ -23,6 +24,8 @@ export class LobbyComponent implements OnInit {
   mainMessage: string;
   dice: number[] = [];
   debug: boolean = false;
+  gameOver: boolean = false;
+  gameOverMessage: string;
 
   players: Participant[] = [];
   playerId: string;
@@ -37,7 +40,8 @@ export class LobbyComponent implements OnInit {
   faClipboard: IconDefinition = faClipboard;
   faSignOutAlt: IconDefinition = faSignOutAlt;
 
-  constructor(private lobbyService: LobbyService, private messageService: ServerMessageService, nameGeneratorService: NameGeneratorService) {
+  constructor(private lobbyService: LobbyService, private messageService: ServerMessageService, nameGeneratorService: NameGeneratorService,
+    private router: Router) {
     this.name = nameGeneratorService.generateName();
   }
 
@@ -51,6 +55,7 @@ export class LobbyComponent implements OnInit {
         }
         this.loggedIn = true;
         this.slowDown = false;
+        this.gameOver = false;
         this.messageService.connect().subscribe(next => this.processGameMessage(next, 0), error => console.error(`error when subscribing to messages: ${console.error}`));
         if (next.value.gameId) {
           this.setGameId(next.value.gameId);
@@ -59,11 +64,17 @@ export class LobbyComponent implements OnInit {
             messages.forEach(message => { this.processGameMessage(message, 0) });
           },
             error => console.error(`error fetching game state: ${error}`)
-          )
+          );
         }
       },
         error => console.log(`got a login error: ${error.error.message}`));
     }
+  }
+  
+  onClickLogout() {
+    this.lobbyService.logout().subscribe(next => this.loggedIn = false, error => console.log(error.error.message));
+    this.messageService.disconnect();
+    this.router.navigate(['/']);
   }
 
   setGameId(newGameId: string) {
@@ -75,6 +86,10 @@ export class LobbyComponent implements OnInit {
       
       this.joinLink = `http://${window.location.host}/join/${newGameId}`;
     }
+  }
+
+  onClickBackToLobby(){
+    this.router.navigate(['/']);
   }
 
   onClaim(event: Claim) {
@@ -103,12 +118,6 @@ export class LobbyComponent implements OnInit {
     this.lobbyService.setName(this.gameId, userName).subscribe(
       next => console.log(`username updated successfully`), 
       error => console.error(`username update failed: ${JSON.stringify(error)}`));
-  }
-
-  onClickLogout() {
-    this.lobbyService.logout().subscribe(next => this.loggedIn = false, error => console.log(error.error.message));
-    this.messageService.disconnect();
-    window.location.reload();
   }
 
   onClickCreateGame() {
@@ -185,12 +194,13 @@ export class LobbyComponent implements OnInit {
     this.mainMessage = "game has started.";
   }
 
-  processGameOver(gameOver: GameOver) {
-    if (gameOver.winner.userId === this.playerId) {
-      this.mainMessage = `Congrats!  You win!`;
+  processGameOver(gameOverMessage: GameOver) {
+    this.gameOver = true;
+    if (gameOverMessage.winner.userId === this.playerId) {
+      this.gameOverMessage = `Congrats!  You win!`;
     }
     else {
-      this.mainMessage = `Congrats to ${gameOver.winner.name} on their win!  Better luck next time.`;
+      this.gameOverMessage = `Congrats to ${gameOverMessage.winner.name} on their win!  Better luck next time.`;
     }
     this.gameStarted = false;
     this.setGameId(null);

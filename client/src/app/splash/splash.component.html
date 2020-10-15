@@ -1,0 +1,28 @@
+<div class="jumbotron p-3 text-white bg-dark">
+    <div class="col-md-8 col-lg-6 px-0">
+        <h1 class="display-4 font-italic">What is Liar's Dice?</h1>
+        <p class="lead my-3">Liar's dice is a game that requires the ability to deceive and to detect your opponent's deception.</p>
+        <button (click)="onClickCreateGame()">Create Game</button>
+    </div>
+</div>
+<div class="px-3">
+    <h2>How do I play?</h2>
+    <p>The goal of the game is to outlast your opponents.</p>
+    <p>Each player starts with 5 dice.</p>
+    <p>At the start of the round, all players roll their dice.</p>
+    <p>The first player makes a claim "I have 2 6s".</p>
+    <p>Play continues to the next player who has 3 options:</p>
+    <ul>
+        <li>Claim they have a greater quantity of any value "I have 3 2s"</li>
+        <li>Call cheat on the claimer "I don't think you DO have 2 6s"</li>
+        <li>Call bang-on on the claimer "I think you have EXACTLY 2 6s"</li>
+    </ul>
+    <p>Calling cheat or bang-on ends the round with a resolution.</p>
+    <ul>
+        <li>If you call cheat and they were lying, they lose a die.</li>
+        <li>If you call cheat and they were telling the truth, you lose a die.</li>
+        <li>If you call bang-on and they were telling the truth, they lose two dice.</li>
+        <li>If you call bang-on and they were lying the truth, you lose two dice.</li>
+    </ul>
+    <p>When you run out of dice, you're eliminated.</p>
+</div>

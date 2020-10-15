@@ -15,6 +15,7 @@ import { SelectionComponent } from './lobby/selection/selection.component';
 import { ClaimComponent } from './lobby/claim/claim.component';
 import { PlayersComponent } from './lobby/players/players.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { SplashComponent } from './splash/splash.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
     RollComponent,
     SelectionComponent,
     ClaimComponent,
-    PlayersComponent
+    PlayersComponent,
+    SplashComponent
   ],
   imports: [
     BrowserModule,
@@ -40,4 +42,5 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
   }],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule { 
+}

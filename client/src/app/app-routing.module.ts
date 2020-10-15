@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { LobbyComponent } from './lobby/lobby.component';
 import { JoinComponent } from './join/join.component';
+import { SplashComponent } from './splash/splash.component';
 
 const routes: Routes = [
   {
@@ -14,7 +15,7 @@ const routes: Routes = [
   },
   {
     path: '**',
-    component: LobbyComponent
+    component: SplashComponent
   }
 ];
 
