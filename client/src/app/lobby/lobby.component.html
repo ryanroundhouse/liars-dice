@@ -1,29 +1,28 @@
-<div class="row justify-content-end" *ngIf="gameId">
-    <button (click)="onClickLogout()"><fa-icon [icon]="faSignOutAlt"></fa-icon></button>
+<div class="row justify-content-between" *ngIf="gameId">
+    <div *ngIf="!gameStarted">
+        <span class="mr-2">Send someone this link to join:</span>
+        <input type="text" id="gameIdBox" [(ngModel)]="joinLink" #userinput readonly>
+        <button class="ml-2" (click)="onClickCopyGameLink(userinput)"><fa-icon [icon]="faClipboard"></fa-icon></button>
+    </div>
+    <div *ngIf="gameStarted"></div>
+    <button (click)="onClickLogout()" ><fa-icon [icon]="faSignOutAlt"></fa-icon></button>
 </div>
 <!-- Game screen -->
 <div *ngIf="gameId">
-    <div *ngIf="!gameStarted">
-        <div *ngIf="gameId" class="m-3">
-            <span class="mr-2">Send someone this link to join:</span>
-            <input type="text" id="gameIdBox" class="my-3" [(ngModel)]="joinLink" #userinput readonly>
-            <button class="ml-2" (click)="onClickCopyGameLink(userinput)"><fa-icon [icon]="faClipboard"></fa-icon></button><br/>
-            <span class="mr-2">Change your name:</span>
-            <input type="text" id="nameBox" class="my-3" [(ngModel)]="name" #userName>
-            <button class="ml-2" (click)="onClickSetName(userName.value)">Set Name</button><br/>
-        </div>
+    <div *ngIf="!gameStarted && gameId" class="row">
+        <span>Change your name:</span>
+        <input class="mx-2" type="text" id="nameBox" [(ngModel)]="name" maxlength="16" #userName>
+        <button (click)="onClickSetName(userName.value)">Set Name</button>
     </div>
     <div *ngIf="players.length > 0">
         <liar-players [playerId]="playerId" [selectedPlayer]="playerTurn" [claim]="lastClaim" [players]="players" ></liar-players>
     </div>
-    <br/>
-    <br/>
-    <h3 class="mainMessage">{{ mainMessage }}</h3>
-    <div *ngIf="gameStarted">
+    <h3 class="mainMessage mt-5">{{ mainMessage }}</h3>
+    <div *ngIf="gameStarted" class="mt-5">
         <liar-roll [dice]="dice"></liar-roll>
         <liar-selection *ngIf="yourTurn" [minQuantity]="minQuantity" (claim)="onClaim($event)"></liar-selection><br/><br/>
     </div>
-    <div *ngIf="!gameStarted && gameId" class="row justify-content-around">
+    <div *ngIf="!gameStarted && gameId" class="row justify-content-around mt-5">
         <button (click)="onClickStartGame()">Start Game</button>
     </div>
     <div *ngIf="debug">
