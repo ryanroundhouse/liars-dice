@@ -9,13 +9,9 @@
 </div>
 <!-- Game screen -->
 <div *ngIf="gameId">
-    <div *ngIf="!gameStarted && gameId" class="row">
-        <span>Change your name:</span>
-        <input class="mx-2" type="text" id="nameBox" [(ngModel)]="name" maxlength="16" #userName>
-        <button (click)="onClickSetName(userName.value)">Set Name</button>
-    </div>
     <div *ngIf="players.length > 0">
-        <liar-players [playerId]="playerId" [selectedPlayer]="playerTurn" [claim]="lastClaim" [players]="players" ></liar-players>
+        <liar-players [playerId]="playerId" [selectedPlayer]="playerTurn" [claim]="lastClaim" [players]="players" 
+            [gameStarted]="gameStarted" [gameId]="gameId" [name]="name" ></liar-players>
     </div>
     <h3 class="mainMessage mt-5">{{ mainMessage }}</h3>
     <div *ngIf="gameStarted" class="mt-5">

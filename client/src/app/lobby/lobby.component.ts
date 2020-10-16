@@ -70,7 +70,7 @@ export class LobbyComponent implements OnInit {
         error => console.log(`got a login error: ${error.error.message}`));
     }
   }
-  
+
   onClickLogout() {
     this.lobbyService.logout().subscribe(next => this.loggedIn = false, error => console.log(error.error.message));
     this.messageService.disconnect();
@@ -107,17 +107,6 @@ export class LobbyComponent implements OnInit {
     inputElement.select();
     document.execCommand('copy');
     inputElement.setSelectionRange(0, 0);
-  }
-
-  onClickSetName(userName: string){
-    if (userName.length <= 0){
-      console.log(`can't set username to blank value`);
-      return;
-    }
-    console.log(`setting username to ${userName}`);
-    this.lobbyService.setName(this.gameId, userName).subscribe(
-      next => console.log(`username updated successfully`), 
-      error => console.error(`username update failed: ${JSON.stringify(error)}`));
   }
 
   onClickCreateGame() {
