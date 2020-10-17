@@ -1,10 +1,12 @@
 import express from "express";
+import { Request, Response } from "express";
 import compression from "compression";  // compresses requests
 import bodyParser from "body-parser";
 import path from "path";
 import sessionParser from "./session-parser";
 import * as gameController from "./controllers/game-controller";
 import * as playerController from "./controllers/player-controller";
+import logger from "./logger";
 
 // Create Express server
 const app = express();
@@ -42,5 +44,10 @@ app.get('/game/:gameId/start', gameController.startGame);
 app.get('/game/:gameId/', gameController.getGameState);
 app.post('/game/:gameId/claim', gameController.claim);
 app.put('/player', playerController.updatePlayer);
+app.get('*', (req: Request, res: Response) => {
+  res.status(200).sendFile(path.resolve(path.join(__dirname, 'public', 'index.html')));
+});
+
+
 
 export default app;
