@@ -11,31 +11,31 @@ export class LobbyService {
   constructor(private http: HttpClient) { }
 
   login(): Observable<LiarInterface.Result<LiarInterface.Login>>{
-    return this.http.get<LiarInterface.Result<LiarInterface.Login>>(`http://liar.ryangraham.ca/login`, {withCredentials: true});
+    return this.http.get<LiarInterface.Result<LiarInterface.Login>>(`https://liar.ryangraham.ca/login`, {withCredentials: true});
   }
 
   logout(): Observable<LiarInterface.Result<string>>{
-    return this.http.delete<LiarInterface.Result<string>>(`http://liar.ryangraham.ca/logout`, {withCredentials: true});
+    return this.http.delete<LiarInterface.Result<string>>(`https://liar.ryangraham.ca/logout`, {withCredentials: true});
   }
   
   createGame(): Observable<LiarInterface.Result<string>>{
-    return this.http.get<LiarInterface.Result<string>>(`http://liar.ryangraham.ca/game/create`, {withCredentials: true});
+    return this.http.get<LiarInterface.Result<string>>(`https://liar.ryangraham.ca/game/create`, {withCredentials: true});
   }
   
   startGame(gameId: string): Observable<LiarInterface.Result<string>>{
-    return this.http.get<LiarInterface.Result<string>>(`http://liar.ryangraham.ca/game/${gameId}/start`, {withCredentials: true});
+    return this.http.get<LiarInterface.Result<string>>(`https://liar.ryangraham.ca/game/${gameId}/start`, {withCredentials: true});
   }
   
   getGameState(gameId: string): Observable<LiarInterface.Result<LiarInterface.GameMessage[]>>{
-    return this.http.get<LiarInterface.Result<LiarInterface.GameMessage[]>>(`http://liar.ryangraham.ca/game/${gameId}`, {withCredentials: true});
+    return this.http.get<LiarInterface.Result<LiarInterface.GameMessage[]>>(`https://liar.ryangraham.ca/game/${gameId}`, {withCredentials: true});
   }
   
   joinGame(gameId: string, name: string): Observable<LiarInterface.Result<LiarInterface.Participant[]>>{
-    return this.http.post<LiarInterface.Result<LiarInterface.Participant[]>>(`http://liar.ryangraham.ca/game/${gameId}/join`, { name: name }, {withCredentials: true});
+    return this.http.post<LiarInterface.Result<LiarInterface.Participant[]>>(`https://liar.ryangraham.ca/game/${gameId}/join`, { name: name }, {withCredentials: true});
   }
 
   setName(gameId: string, name: string): Observable<LiarInterface.Result<string>>{
-    return this.http.put<LiarInterface.Result<string>>(`http://liar.ryangraham.ca/player`, { name: name, gameId: gameId}, {withCredentials: true});
+    return this.http.put<LiarInterface.Result<string>>(`https://liar.ryangraham.ca/player`, { name: name, gameId: gameId}, {withCredentials: true});
   }
 
   claim(gameId: string, quantity: number, value: number, bangOn: boolean, cheat: boolean): Observable<LiarInterface.Result<string>>{
@@ -49,8 +49,6 @@ export class LobbyService {
       messageType: LiarInterface.MessageType.Claim,
       message: claim
     }
-    return this.http.post<LiarInterface.Result<string>>(`http://liar.ryangraham.ca/game/${gameId}/claim`, message, {withCredentials: true});
+    return this.http.post<LiarInterface.Result<string>>(`https://liar.ryangraham.ca/game/${gameId}/claim`, message, {withCredentials: true});
   }
 }
-
-"v=spf1 include:mailgun.org ~all"

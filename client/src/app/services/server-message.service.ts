@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators';
 import { GameMessage, Result } from '@ryanroundhouse/liars-dice-interface';
 import { WebsocketService } from './websocket.service';
 
-const WS_URL = "ws://localhost:3000";
+const WS_URL = "ws://liar.ryangraham.ca";
 
 @Injectable({
   providedIn: 'root'
