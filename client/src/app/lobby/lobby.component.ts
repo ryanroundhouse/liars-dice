@@ -7,6 +7,7 @@ import { faClipboard, faSignOutAlt, IconDefinition } from '@fortawesome/free-sol
 import { ServerMessageService } from '../services/server-message.service';
 import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults, UiGameMessage, GameOver, NameChange } from '@ryanroundhouse/liars-dice-interface';
 import { Router } from '@angular/router';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'liar-lobby',
@@ -84,7 +85,7 @@ export class LobbyComponent implements OnInit {
     }
     else {
       
-      this.joinLink = `http://${window.location.host}/join/${newGameId}`;
+      this.joinLink = `${environment.ssl}://${window.location.host}/join/${newGameId}`;
     }
   }
 
