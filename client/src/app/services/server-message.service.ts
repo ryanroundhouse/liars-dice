@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Subject, Observable, Observer } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { GameMessage, Result } from '@ryanroundhouse/liars-dice-interface';
+import { Subject } from 'rxjs';
+import { GameMessage } from '@ryanroundhouse/liars-dice-interface';
 import { WebsocketService } from './websocket.service';
+import { environment } from 'src/environments/environment';
 
-const WS_URL = "wss://liar.ryangraham.ca";
+const WS_URL = `${environment.ws}://${environment.domainNameAndPort}`;
 
 @Injectable({
   providedIn: 'root'
