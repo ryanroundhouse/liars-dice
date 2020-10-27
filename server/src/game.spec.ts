@@ -289,6 +289,32 @@ describe("game functionality", () => {
             result.ok.should.be.true;
             expect(messengerStub.sendGameMessageToAll.calledOnce).to.be.true;
         });
+        it("can't join game if game is full", () => {
+            const fullGameId = "fullGameId";
+            const messenger = new Messenger();
+            const messengerStub = sinon.stub(messenger);
+            messengerStub.sendGameMessageToAll.returns({ok: true});
+            const game: Game = new Game(messengerStub);
+            const gamePopulation: Map<string, GameInterface> = new Map<string, GameInterface>();
+            const gameInterface: GameInterface = {
+                started: false,
+                finished: false,
+                participants: [
+                    createPlayer("participant1", "name1"), 
+                    createPlayer("participant2", "name2"), 
+                    createPlayer("participant3", "name3"), 
+                    createPlayer("participant4", "name4"), 
+                    createPlayer("participant5", "name5"), 
+                    createPlayer("participant6", "name6"), 
+                ],
+                gameMessageLog: []
+            }
+            const participant7 = createPlayer("participant7", "name7");
+            gamePopulation.set(fullGameId, gameInterface);
+            const result: Result<Participant[]> = game.joinGame(participant7.userId, fullGameId, participant7.name, gamePopulation);
+            result.ok.should.be.false;
+            result.message.should.equal(ErrorMessage.GameFull);
+        });
     });
     describe("start game functionality", () => {
         it("can't start game if you don't provide a userID", () => {
@@ -2904,3 +2930,14 @@ describe("game functionality", () => {
         });
     });
 });
+
+function createPlayer(id: string, name: string): Participant{
+    const participant: Participant = {
+        userId: id,
+        name: name,
+        numberOfDice: 5,
+        roll: [],
+        eliminated: false
+    };
+    return participant
+}

@@ -24,6 +24,7 @@ export enum ErrorMessage{
     UnableToDetermineStartingPlayer = "Unable to determine starting player.",
     GameNotStarted = "game not started",
     GameAlreadyFinished = "game already finished.",
+    GameFull = "game is full",
     MustHaveTwoOrMorePlayers = "must have 2 or more players.",
     PlayerNotFound = "player not found.",
 }
