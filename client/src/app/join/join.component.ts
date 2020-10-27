@@ -25,7 +25,7 @@ export class JoinComponent implements OnInit {
       },
       error => {
         console.error(`got a join game error: ${error.error.message}`);
-        this.errorMessage = "either game doesn't exist or you just can't join it.";
+        this.errorMessage = "either game doesn't exist, it's full, or you just can't join it.";
       });
     }, 
     error => {

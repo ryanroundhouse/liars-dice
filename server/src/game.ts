@@ -60,6 +60,9 @@ export class Game{
         if (existingGame.started){
             return { ok: false, message: ErrorMessage.GameAlreadyStarted };
         }
+        if (existingGame.participants.length >= 6){
+            return { ok: false, message: ErrorMessage.GameFull };
+        }
         let alreadyInGame = false;
         gamePopulation.forEach((selectedGame: GameInterface) => {
             if (typeof selectedGame.participants.find(selectedParticipant => selectedParticipant.userId === userId && selectedParticipant.eliminated === false) !== "undefined"){

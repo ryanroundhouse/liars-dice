@@ -300,20 +300,22 @@ describe("game functionality", () => {
                 started: false,
                 finished: false,
                 participants: [
-                    createPlayer("participant1", "name1"), 
-                    createPlayer("participant2", "name2"), 
-                    createPlayer("participant3", "name3"), 
-                    createPlayer("participant4", "name4"), 
-                    createPlayer("participant5", "name5"), 
-                    createPlayer("participant6", "name6"), 
+                    createPlayer("participant1", "name1"),
+                    createPlayer("participant2", "name2"),
+                    createPlayer("participant3", "name3"),
+                    createPlayer("participant4", "name4"),
+                    createPlayer("participant5", "name5"),
                 ],
                 gameMessageLog: []
             }
+            const participant6 = createPlayer("participant6", "name6");
             const participant7 = createPlayer("participant7", "name7");
             gamePopulation.set(fullGameId, gameInterface);
-            const result: Result<Participant[]> = game.joinGame(participant7.userId, fullGameId, participant7.name, gamePopulation);
-            result.ok.should.be.false;
-            result.message.should.equal(ErrorMessage.GameFull);
+            const goodResult: Result<Participant[]> = game.joinGame(participant6.userId, fullGameId, participant6.name, gamePopulation);
+            goodResult.ok.should.be.true;
+            const fullResult: Result<Participant[]> = game.joinGame(participant7.userId, fullGameId, participant7.name, gamePopulation);
+            fullResult.ok.should.be.false;
+            fullResult.message.should.equal(ErrorMessage.GameFull);
         });
     });
     describe("start game functionality", () => {
@@ -2934,7 +2936,7 @@ describe("game functionality", () => {
 function createPlayer(id: string, name: string): Participant{
     const participant: Participant = {
         userId: id,
-        name: name,
+        name,
         numberOfDice: 5,
         roll: [],
         eliminated: false
