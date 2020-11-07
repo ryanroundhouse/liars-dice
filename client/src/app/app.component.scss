@@ -1,23 +1,23 @@
 header {
-    grid-column: 1 / 4;
+  grid-column: 1 / 4;
 }
 
 main {
-    grid-column: 2 / 3;
+  grid-column: 2 / 3;
 }
 
 footer {
-    padding: 2rem;
-    text-align: center;
-    grid-column: 1 / 4;
+  padding: 2rem;
+  text-align: center;
+  grid-column: 1 / 4;
 }
 
-a{
-    color: #F78D1E;
-    font-family: 'BebasNeue', 'system-ui', sans-serif;
+a {
+  color: #f78d1e;
+  font-family: 'BebasNeue', 'system-ui', sans-serif;
 }
 
-#title{
-    font-weight: bold;
-    letter-spacing: 2px;
+#title {
+  font-weight: bold;
+  letter-spacing: 2px;
 }

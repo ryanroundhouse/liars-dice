@@ -1,79 +1,126 @@
 import { Component, OnInit } from '@angular/core';
 import { Queue } from 'queue-typescript';
-import { LobbyService } from '../services/lobby.service';
-import { NameGeneratorService } from '../services/name-generator.service';
 import { faClipboard, faSignOutAlt, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
-import { ServerMessageService } from '../services/server-message.service';
-import { GameMessage, MessageType, RoundSetup, Participant, Claim, RoundResults, UiGameMessage, GameOver, NameChange } from '@ryanroundhouse/liars-dice-interface';
+import {
+  GameMessage,
+  MessageType,
+  RoundSetup,
+  Participant,
+  Claim,
+  RoundResults,
+  UiGameMessage,
+  GameOver,
+  NameChange,
+} from '@ryanroundhouse/liars-dice-interface';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
+import { ServerMessageService } from '../services/server-message.service';
+import { NameGeneratorService } from '../services/name-generator.service';
+import { LobbyService } from '../services/lobby.service';
 
 @Component({
   selector: 'liar-lobby',
   templateUrl: './lobby.component.html',
-  styleUrls: ['./lobby.component.scss']
+  styleUrls: ['./lobby.component.scss'],
 })
 export class LobbyComponent implements OnInit {
-  loggedIn: boolean = false;
+  loggedIn = false;
+
   gameId: string;
+
   joinLink: string;
+
   name: string;
-  minQuantity: number = 1;
-  gameStarted: boolean = false;
-  yourTurn: boolean = false;
+
+  minQuantity = 1;
+
+  gameStarted = false;
+
+  yourTurn = false;
+
   mainMessage: string;
+
   dice: number[] = [];
-  debug: boolean = false;
-  gameOver: boolean = false;
+
+  debug = false;
+
+  gameOver = false;
+
   gameOverMessage: string;
 
   players: Participant[] = [];
+
   playerId: string;
+
   playerTurn: string;
 
   messages: GameMessage[] = [];
+
   quantity: number;
+
   value: number;
+
   lastClaim: Claim;
+
   messageQueue: Queue<UiGameMessage> = new Queue<UiGameMessage>();
-  slowDown: boolean = false;
+
+  slowDown = false;
+
   faClipboard: IconDefinition = faClipboard;
+
   faSignOutAlt: IconDefinition = faSignOutAlt;
 
-  constructor(private lobbyService: LobbyService, private messageService: ServerMessageService, nameGeneratorService: NameGeneratorService,
-    private router: Router) {
+  constructor(
+    private lobbyService: LobbyService,
+    private messageService: ServerMessageService,
+    nameGeneratorService: NameGeneratorService,
+    private router: Router,
+  ) {
     this.name = nameGeneratorService.generateName();
   }
 
   ngOnInit(): void {
     if (!this.playerId) {
-      this.lobbyService.login().subscribe(next => {
-        console.log(next);
-        this.playerId = next.value.userId;
-        if (next.value.name){
-          this.name = next.value.name;
-        }
-        this.loggedIn = true;
-        this.slowDown = false;
-        this.gameOver = false;
-        this.messageService.connect().subscribe(next => this.processGameMessage(next, 0), error => console.error(`error when subscribing to messages: ${console.error}`));
-        if (next.value.gameId) {
-          this.setGameId(next.value.gameId);
-          this.lobbyService.getGameState(this.gameId).subscribe(next => {
-            const messages = next.value;
-            messages.forEach(message => { this.processGameMessage(message, 0) });
-          },
-            error => console.error(`error fetching game state: ${error}`)
+      this.lobbyService.login().subscribe(
+        (loginResponse) => {
+          console.log(loginResponse);
+          this.playerId = loginResponse.value.userId;
+          if (loginResponse.value.name) {
+            this.name = loginResponse.value.name;
+          }
+          this.loggedIn = true;
+          this.slowDown = false;
+          this.gameOver = false;
+          this.messageService.connect().subscribe(
+            (connectResponse) => this.processGameMessage(connectResponse, 0),
+            (error) => console.error(`error when subscribing to messages: ${error}`),
           );
-        }
-      },
-        error => console.log(`got a login error: ${error.error.message}`));
+          if (loginResponse.value.gameId) {
+            this.setGameId(loginResponse.value.gameId);
+            this.lobbyService.getGameState(this.gameId).subscribe(
+              (getGameDateResponse) => {
+                const messages = getGameDateResponse.value;
+                messages.forEach((message) => {
+                  this.processGameMessage(message, 0);
+                });
+              },
+              (error) => console.error(`error fetching game state: ${error}`),
+            );
+          }
+        },
+        (error) => console.log(`got a login error: ${error.error.message}`),
+      );
     }
   }
 
   onClickLogout() {
-    this.lobbyService.logout().subscribe(next => this.loggedIn = false, error => console.log(error.error.message));
+    this.lobbyService.logout().subscribe(
+      () => {
+        this.loggedIn = false;
+      },
+      (error) => console.log(error.error.message),
+    );
     this.messageService.disconnect();
     this.router.navigate(['/']);
   }
@@ -82,26 +129,27 @@ export class LobbyComponent implements OnInit {
     this.gameId = newGameId;
     if (!newGameId) {
       this.joinLink = null;
-    }
-    else {
-      
+    } else {
       this.joinLink = `${environment.ssl}://${window.location.host}/join/${newGameId}`;
     }
   }
 
-  onClickBackToLobby(){
+  onClickBackToLobby() {
     this.router.navigate(['/']);
   }
 
   onClaim(event: Claim) {
-    this.lobbyService.claim(this.gameId, event.quantity, event.value, event.bangOn, event.cheat).subscribe(next => {
-      console.log(next);
-      this.quantity = null;
-      this.value = null;
-      this.yourTurn = false;
-    },
-      error => console.error(error.error.message)
-    );
+    this.lobbyService
+      .claim(this.gameId, event.quantity, event.value, event.bangOn, event.cheat)
+      .subscribe(
+        (next) => {
+          console.log(next);
+          this.quantity = null;
+          this.value = null;
+          this.yourTurn = false;
+        },
+        (error) => console.error(error.error.message),
+      );
   }
 
   onClickCopyGameLink(inputElement) {
@@ -111,29 +159,44 @@ export class LobbyComponent implements OnInit {
   }
 
   onClickCreateGame() {
-    this.lobbyService.createGame().subscribe(next => {
-      this.setGameId(next.value);
-      console.log(next);
-      this.lobbyService.joinGame(this.gameId, this.name).subscribe(next => {
-        console.log('got join game response: ' + JSON.stringify(next));
-        const existingPlayers: Participant[] = next.value;
-        this.players = this.players.concat(existingPlayers);
+    this.lobbyService.createGame().subscribe(
+      (createGameResponse) => {
+        this.setGameId(createGameResponse.value);
+        console.log(createGameResponse);
+        this.lobbyService.joinGame(this.gameId, this.name).subscribe(
+          (joinGameResponse) => {
+            console.log(`got join game response: ${JSON.stringify(joinGameResponse)}`);
+            const existingPlayers: Participant[] = joinGameResponse.value;
+            this.players = this.players.concat(existingPlayers);
+          },
+          (joinGameError) => console.log(joinGameError.error.message),
+        );
       },
-        error => console.log(error.error.message));
-    },
-      error => console.log(error));
+      (createGameError) => console.log(createGameError),
+    );
   }
 
   onClickStartGame() {
-    this.lobbyService.startGame(this.gameId).subscribe(next => this.gameStarted = true, error => console.log(error.error.message));
+    this.lobbyService.startGame(this.gameId).subscribe(
+      () => {
+        this.gameStarted = true;
+      },
+      (error) => console.log(error.error.message),
+    );
   }
 
   processRoundResults(results: RoundResults) {
     this.lastClaim = null;
-    let message: string = `${results.callingPlayer.name} called ${results.claim.bangOn ? "cheat" : "bang on"} on ${results.calledPlayer.name}.  `;
-    message += `They were ${results.claimSuccess ? "wrong! " : "right! "} They had ${this.countNumberOfThatRoll(results.calledPlayer.roll, results.claim.value)} ${results.claim.value}s.`;
+    let message = `${results.callingPlayer.name} called ${
+      results.claim.bangOn ? 'cheat' : 'bang on'
+    } on ${results.calledPlayer.name}.  `;
+    message += `They were ${
+      results.claimSuccess ? 'wrong! ' : 'right! '
+    } They had ${this.countNumberOfThatRoll(results.calledPlayer.roll, results.claim.value)} ${
+      results.claim.value
+    }s.`;
     if (results.playerEliminated) {
-      message += " They are eliminated from the game.";
+      message += ' They are eliminated from the game.';
     }
     this.mainMessage = message;
   }
@@ -145,29 +208,27 @@ export class LobbyComponent implements OnInit {
     if (this.playerTurn === this.playerId) {
       this.yourTurn = true;
       this.mainMessage = "It's your turn.  Make a claim.";
-    }
-    else {
+    } else {
       this.mainMessage = "It's someone else's turn.";
       this.yourTurn = false;
     }
   }
 
   processClaim(claim: Claim) {
-    const lastPlayer = this.players.find(player => player.userId === claim.playerId);
-    let message: string = "";
+    const lastPlayer = this.players.find((player) => player.userId === claim.playerId);
+    let message = '';
     if (!claim.bangOn && !claim.cheat) {
-      message = lastPlayer.name + " claimed " + claim.quantity + " " + claim.value + "s.  It's ";
+      message = `${lastPlayer.name} claimed ${claim.quantity} ${claim.value}s.  It's `;
     }
 
     this.lastClaim = claim;
     this.playerTurn = claim.nextPlayerId;
     if (this.playerTurn === this.playerId) {
-      message += "your turn.";
+      message += 'your turn.';
       this.yourTurn = true;
-    }
-    else {
-      const nextPlayer = this.players.find(player => player.userId === claim.nextPlayerId);
-      message += nextPlayer.name + "'s turn.";
+    } else {
+      const nextPlayer = this.players.find((player) => player.userId === claim.nextPlayerId);
+      message += `${nextPlayer.name}'s turn.`;
       this.yourTurn = false;
     }
     this.minQuantity = Number(claim.quantity) + 1;
@@ -181,15 +242,14 @@ export class LobbyComponent implements OnInit {
 
   processGameStarted() {
     this.gameStarted = true;
-    this.mainMessage = "game has started.";
+    this.mainMessage = 'game has started.';
   }
 
   processGameOver(gameOverMessage: GameOver) {
     this.gameOver = true;
     if (gameOverMessage.winner.userId === this.playerId) {
       this.gameOverMessage = `Congrats!  You win!`;
-    }
-    else {
+    } else {
       this.gameOverMessage = `Congrats to ${gameOverMessage.winner.name} on their win!  Better luck next time.`;
     }
     this.gameStarted = false;
@@ -198,7 +258,7 @@ export class LobbyComponent implements OnInit {
   }
 
   private processNextMessage() {
-    console.log("started processing next message...");
+    console.log('started processing next message...');
     let secondsDelay = 0;
     if (this.messageQueue.length > 0) {
       const uiGameMessage: UiGameMessage = this.messageQueue.dequeue();
@@ -231,53 +291,54 @@ export class LobbyComponent implements OnInit {
         }
         case MessageType.NameChangeMessage: {
           this.processNameChange(uiGameMessage.gameMessage.message as NameChange);
+          break;
+        }
+        default: {
+          console.log('unexpected message type');
         }
       }
       setTimeout(() => {
         // console.log("timeout expired.");
         this.processNextMessage();
       }, secondsDelay * 1000);
-    }
-    else {
+    } else {
       console.log('no more messages to process.  clearing slowdown.');
       this.slowDown = false;
     }
   }
+
   processNameChange(nameChange: NameChange) {
     console.log(`processing name change event: ${JSON.stringify(nameChange)}`);
-    let player = this.players.find(player => player.userId === nameChange.playerId);
-    let nameChangeMessage: string;
-    if (!player){
+    const player = this.players.find((foundPlayer) => foundPlayer.userId === nameChange.playerId);
+    if (!player) {
       console.error(`player not found.`);
-    }
-    else{
+    } else {
       this.mainMessage = `${player.name} changed their name to ${nameChange.name}`;
       player.name = nameChange.name;
     }
   }
 
   processGameMessage(gameMessage: GameMessage, seconds: number) {
-    console.log('message received: ' + JSON.stringify(gameMessage));
+    console.log(`message received: ${JSON.stringify(gameMessage)}`);
     this.messages.push(gameMessage);
-    const uiGameMessage: UiGameMessage = { gameMessage: gameMessage, secondsDelay: seconds };
+    const uiGameMessage: UiGameMessage = { gameMessage, secondsDelay: seconds };
     this.messageQueue.enqueue(uiGameMessage);
     if (!this.slowDown) {
-      console.log("no message loop processing.  Kick it off.");
+      console.log('no message loop processing.  Kick it off.');
       this.slowDown = true;
       this.processNextMessage();
-    }
-    else {
-      console.log("message loop running.  Wait for the right time.");
+    } else {
+      console.log('message loop running.  Wait for the right time.');
     }
   }
 
   private countNumberOfThatRoll(roll: number[], value: number) {
     let count = 0;
-    for (const die of roll) {
+    roll.forEach((die) => {
       if (+die === +value) {
-        count++;
+        count += 1;
       }
-    }
+    });
     return count;
   }
 }

@@ -1,11 +1,17 @@
 /* You can add global styles to this file, and also import other style files */
 @import '~bootstrap/dist/css/bootstrap.min.css';
 
-p, li, span, button, input {
-    font-family: 'Montserrat', 'system-ui', sans-serif;
+p,
+li,
+span,
+button,
+input {
+  font-family: 'Montserrat', 'system-ui', sans-serif;
 }
 
-h1, h2, h3{
-    font-family: 'BebasNeue', 'system-ui', sans-serif;
-    letter-spacing: 2px;
+h1,
+h2,
+h3 {
+  font-family: 'BebasNeue', 'system-ui', sans-serif;
+  letter-spacing: 2px;
 }

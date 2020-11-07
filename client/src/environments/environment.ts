@@ -4,9 +4,9 @@
 
 export const environment = {
   production: false,
-  domainNameAndPort: "localhost:3000",
-  ssl: "http",
-  ws: "ws",
+  domainNameAndPort: 'localhost:3000',
+  ssl: 'http',
+  ws: 'ws',
 };
 
 /*

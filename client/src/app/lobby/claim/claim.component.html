@@ -1,6 +1,6 @@
 <ul class="ml-0">
-    <li *ngFor="let value of dice">
-        <img src="{{'assets/img/dice/' + value + '.png'}}"/>
-    </li>
+  <li *ngFor="let value of dice">
+    <img src="{{ 'assets/img/dice/' + value + '.png' }}" />
+  </li>
 </ul>
-<p>{{claimDescription}}</p>
+<p>{{ claimDescription }}</p>
