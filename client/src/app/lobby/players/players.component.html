@@ -1,19 +1,34 @@
 <div class="parent">
-    <div *ngFor='let player of players' [className]="selectedPlayer === player.userId ? 'selected' : ''">
-        <img src="{{'assets/img/silhouette1.png'}}"/><br/>
-        <div *ngIf="player.userId === playerId">
-            <div *ngIf="!gameStarted">
-                <input class="mx-2" type="text" id="nameBox" [(ngModel)]="name" maxlength="16" #userName>
-                <button (click)="onClickSetName(userName.value)">Change Name</button>
-            </div>
-            <div *ngIf="gameStarted">
-                <span *ngIf="!claim || (claim && claim.playerId !== player.userId)">{{ player.name }} (You)</span>
-                <liar-claim *ngIf="claim && claim.playerId === player.userId" [claim]="claim" [players]="players" [playerId]="playerId"></liar-claim>
-            </div>
-        </div>
-        <div *ngIf="player.userId !== playerId">
-            <span *ngIf="!claim || (claim && claim.playerId !== player.userId)">{{ player.name }}</span>
-            <liar-claim *ngIf="claim && claim.playerId === player.userId" [claim]="claim" [players]="players" [playerId]="playerId"></liar-claim>
-        </div>
+  <div
+    *ngFor="let player of players"
+    [className]="selectedPlayer === player.userId ? 'selected' : ''"
+  >
+    <img src="{{ 'assets/img/silhouette1.png' }}" /><br />
+    <div *ngIf="player.userId === playerId">
+      <div *ngIf="!gameStarted">
+        <input class="mx-2" type="text" id="nameBox" [(ngModel)]="name" maxlength="16" #userName />
+        <button (click)="onClickSetName(userName.value)">Change Name</button>
+      </div>
+      <div *ngIf="gameStarted">
+        <span *ngIf="!claim || (claim && claim.playerId !== player.userId)"
+          >{{ player.name }} (You)</span
+        >
+        <liar-claim
+          *ngIf="claim && claim.playerId === player.userId"
+          [claim]="claim"
+          [players]="players"
+          [playerId]="playerId"
+        ></liar-claim>
+      </div>
     </div>
+    <div *ngIf="player.userId !== playerId">
+      <span *ngIf="!claim || (claim && claim.playerId !== player.userId)">{{ player.name }}</span>
+      <liar-claim
+        *ngIf="claim && claim.playerId === player.userId"
+        [claim]="claim"
+        [players]="players"
+        [playerId]="playerId"
+      ></liar-claim>
+    </div>
+  </div>
 </div>

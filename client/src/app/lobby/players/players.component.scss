@@ -1,19 +1,19 @@
-.parent{
-    display: grid;
-    grid-gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    text-align: center;
+.parent {
+  display: grid;
+  grid-gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  text-align: center;
 }
 
-img{
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.selected{
-    border-width: 5px;
-    border-color: gold;
-    border-style: solid;
-    border-radius: 12px;
+.selected {
+  border-width: 5px;
+  border-color: gold;
+  border-style: solid;
+  border-radius: 12px;
 }

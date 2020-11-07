@@ -1,37 +1,51 @@
 <div class="row justify-content-between" *ngIf="gameId">
-    <div *ngIf="!gameStarted">
-        <span class="mr-2">Send someone this link to join:</span>
-        <input type="text" id="gameIdBox" [(ngModel)]="joinLink" #userinput readonly>
-        <button class="ml-2" (click)="onClickCopyGameLink(userinput)"><fa-icon [icon]="faClipboard"></fa-icon></button>
-    </div>
-    <div *ngIf="gameStarted"></div>
-    <button (click)="onClickLogout()" ><fa-icon [icon]="faSignOutAlt"></fa-icon></button>
+  <div *ngIf="!gameStarted">
+    <span class="mr-2">Send someone this link to join:</span>
+    <input type="text" id="gameIdBox" [(ngModel)]="joinLink" #userinput readonly />
+    <button class="ml-2" (click)="onClickCopyGameLink(userinput)">
+      <fa-icon [icon]="faClipboard"></fa-icon>
+    </button>
+  </div>
+  <div *ngIf="gameStarted"></div>
+  <button (click)="onClickLogout()"><fa-icon [icon]="faSignOutAlt"></fa-icon></button>
 </div>
 <!-- Game screen -->
 <div *ngIf="gameId">
-    <div *ngIf="players.length > 0">
-        <liar-players [playerId]="playerId" [selectedPlayer]="playerTurn" [claim]="lastClaim" [players]="players" 
-            [gameStarted]="gameStarted" [gameId]="gameId" [name]="name" ></liar-players>
-    </div>
-    <h3 class="mainMessage mt-5">{{ mainMessage }}</h3>
-    <div *ngIf="gameStarted" class="mt-5">
-        <liar-roll [dice]="dice"></liar-roll>
-        <liar-selection *ngIf="yourTurn" [minQuantity]="minQuantity" (claim)="onClaim($event)"></liar-selection><br/><br/>
-    </div>
-    <div *ngIf="!gameStarted && gameId" class="row justify-content-around mt-5">
-        <button (click)="onClickStartGame()">Start Game</button>
-    </div>
-    <div *ngIf="debug">
-        <br/>
-        <br/>
-        <ul>
-            <li *ngFor='let message of messages'>
-                {{ message.messageType }} - {{ message.message | json }}
-            </li>
-        </ul>
-    </div>
+  <div *ngIf="players.length > 0">
+    <liar-players
+      [playerId]="playerId"
+      [selectedPlayer]="playerTurn"
+      [claim]="lastClaim"
+      [players]="players"
+      [gameStarted]="gameStarted"
+      [gameId]="gameId"
+      [name]="name"
+    ></liar-players>
+  </div>
+  <h3 class="mainMessage mt-5">{{ mainMessage }}</h3>
+  <div *ngIf="gameStarted" class="mt-5">
+    <liar-roll [dice]="dice"></liar-roll>
+    <liar-selection
+      *ngIf="yourTurn"
+      [minQuantity]="minQuantity"
+      (claim)="onClaim($event)"
+    ></liar-selection
+    ><br /><br />
+  </div>
+  <div *ngIf="!gameStarted && gameId" class="row justify-content-around mt-5">
+    <button (click)="onClickStartGame()">Start Game</button>
+  </div>
+  <div *ngIf="debug">
+    <br />
+    <br />
+    <ul>
+      <li *ngFor="let message of messages">
+        {{ message.messageType }} - {{ message.message | json }}
+      </li>
+    </ul>
+  </div>
 </div>
 <div *ngIf="gameOver">
-    <h2>{{gameOverMessage}}</h2>
-    <button (click)="onClickBackToLobby()">Back to Lobby</button>
+  <h2>{{ gameOverMessage }}</h2>
+  <button (click)="onClickBackToLobby()">Back to Lobby</button>
 </div>

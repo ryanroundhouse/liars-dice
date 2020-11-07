@@ -1,94 +1,115 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { Claim } from '@ryanroundhouse/liars-dice-interface';
-import { faPlus, faMinus, faArrowUp, faArrowDown, IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faMinus,
+  faArrowUp,
+  faArrowDown,
+  IconDefinition,
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'liar-selection',
   templateUrl: './selection.component.html',
-  styleUrls: ['./selection.component.scss']
+  styleUrls: ['./selection.component.scss'],
 })
 export class SelectionComponent implements OnInit, OnChanges {
   @Input() minQuantity: number;
+
   @Output() claim = new EventEmitter<Claim>();
-  quantity: number = 3;
-  value: number = 3;
+
+  quantity = 3;
+
+  value = 3;
+
   dice: number[] = [];
+
   faPlus: IconDefinition = faPlus;
+
   faMinus: IconDefinition = faMinus;
+
   faArrowUp: IconDefinition = faArrowUp;
+
   faArrowDown: IconDefinition = faArrowDown;
-  
-  constructor() { }
+
+  constructor() {}
 
   ngOnChanges(changes: SimpleChanges): void {
     this.dice = this.counter(this.minQuantity);
     this.quantity = this.minQuantity;
   }
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
-  regenerateDice(){
-    console.log(`generating ${this.quantity} ${this.value}s`)
-    this.dice = Array.from({length: this.quantity}, () => this.value);
+  regenerateDice() {
+    console.log(`generating ${this.quantity} ${this.value}s`);
+    this.dice = Array.from({ length: this.quantity }, () => this.value);
     console.log(`generated ${JSON.stringify(this.dice)}`);
   }
 
-  onClickUp(){
+  onClickUp() {
     this.value = ++this.value;
-    if (this.value > 6){
+    if (this.value > 6) {
       this.value = 1;
     }
     this.regenerateDice();
   }
 
-  onClickDown(){
+  onClickDown() {
     this.value = --this.value;
-    if (this.value < 1){
+    if (this.value < 1) {
       this.value = 6;
     }
     this.regenerateDice();
   }
 
-  onClickLess(){
+  onClickLess() {
     console.log(`hrm ${this.quantity} vs ${this.minQuantity}`);
-    if (this.quantity > this.minQuantity){
+    if (this.quantity > this.minQuantity) {
       --this.quantity;
       this.regenerateDice();
     }
   }
 
-  onClickBangOn(){
+  onClickBangOn() {
     const bangOnClaim: Claim = {
       quantity: null,
       value: null,
       bangOn: true,
-      cheat: false
-    }
+      cheat: false,
+    };
     this.claim.next(bangOnClaim);
   }
 
-  onClickCheat(){
+  onClickCheat() {
     const cheatClaim: Claim = {
       quantity: null,
       value: null,
       bangOn: false,
-      cheat: true
-    }
+      cheat: true,
+    };
     this.claim.next(cheatClaim);
   }
 
-  onClickClaim(){
+  onClickClaim() {
     const claim: Claim = {
       quantity: this.quantity,
       value: this.value,
       bangOn: false,
-      cheat: false
-    }
+      cheat: false,
+    };
     this.claim.next(claim);
   }
 
-  onClickMore(){
+  onClickMore() {
     ++this.quantity;
     this.regenerateDice();
   }
@@ -96,5 +117,4 @@ export class SelectionComponent implements OnInit, OnChanges {
   counter(i: number) {
     return new Array(i);
   }
-
 }
