@@ -23,5 +23,4 @@ const routes: Routes = [
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule],
 })
-class AppRoutingModule {}
-export { AppRoutingModule as default };
+export class AppRoutingModule {}

@@ -2,12 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import * as LiarInterface from '@ryanroundhouse/liars-dice-interface';
 import { Observable } from 'rxjs';
-import environment from 'src/environments/environment';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
-class LobbyService {
+export class LobbyService {
   constructor(private http: HttpClient) {}
 
   login(): Observable<LiarInterface.Result<LiarInterface.Login>> {
@@ -88,4 +88,3 @@ class LobbyService {
     );
   }
 }
-export { LobbyService as default };

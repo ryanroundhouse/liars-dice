@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root',
 })
-class NameGeneratorService {
+export class NameGeneratorService {
   nameList: string[] = [
     'Maverick',
     'Jonesy',
@@ -25,4 +25,3 @@ class NameGeneratorService {
     return this.nameList[NameGeneratorService.getRandomInt(this.nameList.length)];
   }
 }
-export { NameGeneratorService as default };

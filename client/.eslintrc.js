@@ -4,7 +4,7 @@ module.exports = {
     {
       files: ['*.ts'],
       parserOptions: {
-        project: ['tsconfig.*?.json', 'e2e/tsconfig.json'],
+        project: ['tsconfig.*?.json', 'client/e2e/tsconfig.json'],
         createDefaultProgram: true,
       },
       extends: [
@@ -16,7 +16,10 @@ module.exports = {
         'plugin:prettier/recommended',
       ],
       rules: {
-        //
+        'class-methods-use-this': 'off',
+        'no-underscore-dangle': 'off',
+        'no-console': 'off',
+        'import/prefer-default-export': 'off',
       },
     },
     {

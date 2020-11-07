@@ -8,7 +8,5 @@ import { Component, OnInit, Input } from '@angular/core';
 export class RollComponent implements OnInit {
   @Input() dice: number[];
 
-  constructor() {}
-
   ngOnInit(): void {}
 }

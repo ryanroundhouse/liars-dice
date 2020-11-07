@@ -33,7 +33,7 @@ export class PlayersComponent implements OnInit {
     }
     console.log(`setting username to ${userName}`);
     this.lobbyService.setName(this.gameId, userName).subscribe(
-      (next) => console.log(`username updated successfully`),
+      () => console.log(`username updated successfully`),
       (error) => console.error(`username update failed: ${JSON.stringify(error)}`),
     );
   }

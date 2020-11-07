@@ -1,14 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import LobbyService from '../services/lobby.service';
-import NameGeneratorService from '../services/name-generator.service';
+import { LobbyService } from '../services/lobby.service';
+import { NameGeneratorService } from '../services/name-generator.service';
 
 @Component({
   selector: 'liar-join',
   templateUrl: './join.component.html',
   styleUrls: ['./join.component.scss'],
 })
-class JoinComponent implements OnInit {
+export class JoinComponent implements OnInit {
   gameId: string;
 
   errorMessage: string;
@@ -18,7 +18,7 @@ class JoinComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private nameGeneratorService: NameGeneratorService,
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     console.log(`in join`);
@@ -48,4 +48,3 @@ class JoinComponent implements OnInit {
     this.router.navigate(['/']);
   }
 }
-export { JoinComponent as default };

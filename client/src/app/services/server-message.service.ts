@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { GameMessage } from '@ryanroundhouse/liars-dice-interface';
-import environment from 'src/environments/environment';
-import WebsocketService from './websocket.service';
+import { environment } from 'src/environments/environment';
+import { WebsocketService } from './websocket.service';
 
 const WS_URL = `${environment.ws}://${environment.domainNameAndPort}`;
 
 @Injectable({
   providedIn: 'root',
 })
-class ServerMessageService {
+export class ServerMessageService {
   private subject: Subject<GameMessage>;
 
   constructor(private wsService: WebsocketService) {}
@@ -49,4 +49,3 @@ class ServerMessageService {
     return this.subject;
   }
 }
-export { ServerMessageService as default };

@@ -6,7 +6,7 @@ import { Claim, Participant } from '@ryanroundhouse/liars-dice-interface';
   templateUrl: './claim.component.html',
   styleUrls: ['./claim.component.scss'],
 })
-class ClaimComponent implements OnChanges {
+export class ClaimComponent implements OnChanges {
   private _claim: Claim;
 
   @Input() set claim(value: Claim) {
@@ -72,4 +72,3 @@ class ClaimComponent implements OnChanges {
     }
   }
 }
-export { ClaimComponent as default };

@@ -7,7 +7,7 @@ import { faTwitter, faLinkedin, faGithub, faDocker } from '@fortawesome/free-bra
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
-class AppComponent {
+export class AppComponent {
   title = 'client';
 
   faTwitter: IconDefinition = faTwitter;
@@ -18,4 +18,3 @@ class AppComponent {
 
   faDocker: IconDefinition = faDocker;
 }
-export { AppComponent as default };

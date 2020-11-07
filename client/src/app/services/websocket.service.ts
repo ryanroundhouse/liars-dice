@@ -4,7 +4,7 @@ import { Subject, Observable, Observer } from 'rxjs';
 @Injectable({
   providedIn: 'root',
 })
-class WebsocketService {
+export class WebsocketService {
   private subject: Subject<MessageEvent>;
 
   private ws: WebSocket;
@@ -45,4 +45,3 @@ class WebsocketService {
     return Subject.create(observer, observable);
   }
 }
-export { WebsocketService as default };

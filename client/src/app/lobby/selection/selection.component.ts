@@ -1,12 +1,4 @@
-import {
-  Component,
-  OnInit,
-  Input,
-  OnChanges,
-  SimpleChanges,
-  Output,
-  EventEmitter,
-} from '@angular/core';
+import { Component, OnInit, Input, OnChanges, Output, EventEmitter } from '@angular/core';
 import { Claim } from '@ryanroundhouse/liars-dice-interface';
 import {
   faPlus,
@@ -40,9 +32,7 @@ export class SelectionComponent implements OnInit, OnChanges {
 
   faArrowDown: IconDefinition = faArrowDown;
 
-  constructor() {}
-
-  ngOnChanges(changes: SimpleChanges): void {
+  ngOnChanges(): void {
     this.dice = this.counter(this.minQuantity);
     this.quantity = this.minQuantity;
   }
@@ -56,7 +46,7 @@ export class SelectionComponent implements OnInit, OnChanges {
   }
 
   onClickUp() {
-    this.value = ++this.value;
+    this.value += 1;
     if (this.value > 6) {
       this.value = 1;
     }
@@ -64,7 +54,7 @@ export class SelectionComponent implements OnInit, OnChanges {
   }
 
   onClickDown() {
-    this.value = --this.value;
+    this.value -= 1;
     if (this.value < 1) {
       this.value = 6;
     }
@@ -74,7 +64,7 @@ export class SelectionComponent implements OnInit, OnChanges {
   onClickLess() {
     console.log(`hrm ${this.quantity} vs ${this.minQuantity}`);
     if (this.quantity > this.minQuantity) {
-      --this.quantity;
+      this.quantity -= 1;
       this.regenerateDice();
     }
   }
@@ -110,7 +100,7 @@ export class SelectionComponent implements OnInit, OnChanges {
   }
 
   onClickMore() {
-    ++this.quantity;
+    this.quantity += 1;
     this.regenerateDice();
   }
 

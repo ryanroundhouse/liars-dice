@@ -14,17 +14,17 @@ import {
   NameChange,
 } from '@ryanroundhouse/liars-dice-interface';
 import { Router } from '@angular/router';
-import environment from 'src/environments/environment';
-import ServerMessageService from '../services/server-message.service';
-import NameGeneratorService from '../services/name-generator.service';
-import LobbyService from '../services/lobby.service';
+import { environment } from 'src/environments/environment';
+import { ServerMessageService } from '../services/server-message.service';
+import { NameGeneratorService } from '../services/name-generator.service';
+import { LobbyService } from '../services/lobby.service';
 
 @Component({
   selector: 'liar-lobby',
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.scss'],
 })
-class LobbyComponent implements OnInit {
+export class LobbyComponent implements OnInit {
   loggedIn = false;
 
   gameId: string;
@@ -94,7 +94,7 @@ class LobbyComponent implements OnInit {
           this.gameOver = false;
           this.messageService.connect().subscribe(
             (connectResponse) => this.processGameMessage(connectResponse, 0),
-            (error) => console.error(`error when subscribing to messages: ${console.error}`),
+            (error) => console.error(`error when subscribing to messages: ${error}`),
           );
           if (loginResponse.value.gameId) {
             this.setGameId(loginResponse.value.gameId);
@@ -116,7 +116,9 @@ class LobbyComponent implements OnInit {
 
   onClickLogout() {
     this.lobbyService.logout().subscribe(
-      (next) => (this.loggedIn = false),
+      () => {
+        this.loggedIn = false;
+      },
       (error) => console.log(error.error.message),
     );
     this.messageService.disconnect();
@@ -158,36 +160,41 @@ class LobbyComponent implements OnInit {
 
   onClickCreateGame() {
     this.lobbyService.createGame().subscribe(
-      (next) => {
-        this.setGameId(next.value);
-        console.log(next);
+      (createGameResponse) => {
+        this.setGameId(createGameResponse.value);
+        console.log(createGameResponse);
         this.lobbyService.joinGame(this.gameId, this.name).subscribe(
-          (next) => {
-            console.log(`got join game response: ${JSON.stringify(next)}`);
-            const existingPlayers: Participant[] = next.value;
+          (joinGameResponse) => {
+            console.log(`got join game response: ${JSON.stringify(joinGameResponse)}`);
+            const existingPlayers: Participant[] = joinGameResponse.value;
             this.players = this.players.concat(existingPlayers);
           },
-          (error) => console.log(error.error.message),
+          (joinGameError) => console.log(joinGameError.error.message),
         );
       },
-      (error) => console.log(error),
+      (createGameError) => console.log(createGameError),
     );
   }
 
   onClickStartGame() {
     this.lobbyService.startGame(this.gameId).subscribe(
-      (next) => (this.gameStarted = true),
+      () => {
+        this.gameStarted = true;
+      },
       (error) => console.log(error.error.message),
     );
   }
 
   processRoundResults(results: RoundResults) {
     this.lastClaim = null;
-    let message = `${results.callingPlayer.name} called ${results.claim.bangOn ? 'cheat' : 'bang on'
-      } on ${results.calledPlayer.name}.  `;
-    message += `They were ${results.claimSuccess ? 'wrong! ' : 'right! '
-      } They had ${this.countNumberOfThatRoll(results.calledPlayer.roll, results.claim.value)} ${results.claim.value
-      }s.`;
+    let message = `${results.callingPlayer.name} called ${
+      results.claim.bangOn ? 'cheat' : 'bang on'
+    } on ${results.calledPlayer.name}.  `;
+    message += `They were ${
+      results.claimSuccess ? 'wrong! ' : 'right! '
+    } They had ${this.countNumberOfThatRoll(results.calledPlayer.roll, results.claim.value)} ${
+      results.claim.value
+    }s.`;
     if (results.playerEliminated) {
       message += ' They are eliminated from the game.';
     }
@@ -284,6 +291,10 @@ class LobbyComponent implements OnInit {
         }
         case MessageType.NameChangeMessage: {
           this.processNameChange(uiGameMessage.gameMessage.message as NameChange);
+          break;
+        }
+        default: {
+          console.log('unexpected message type');
         }
       }
       setTimeout(() => {
@@ -298,8 +309,7 @@ class LobbyComponent implements OnInit {
 
   processNameChange(nameChange: NameChange) {
     console.log(`processing name change event: ${JSON.stringify(nameChange)}`);
-    const player = this.players.find((player) => player.userId === nameChange.playerId);
-    let nameChangeMessage: string;
+    const player = this.players.find((foundPlayer) => foundPlayer.userId === nameChange.playerId);
     if (!player) {
       console.error(`player not found.`);
     } else {
@@ -324,12 +334,11 @@ class LobbyComponent implements OnInit {
 
   private countNumberOfThatRoll(roll: number[], value: number) {
     let count = 0;
-    for (const die of roll) {
+    roll.forEach((die) => {
       if (+die === +value) {
-        count++;
+        count += 1;
       }
-    }
+    });
     return count;
   }
 }
-export { LobbyComponent as default };

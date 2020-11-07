@@ -5,8 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import AppRoutingModule from './app-routing.module';
-import AppComponent from './app.component';
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
 import { LobbyComponent } from './lobby/lobby.component';
 
 import { InterceptorService } from './services/interceptor.service';
@@ -38,5 +38,4 @@ import SplashComponent from './splash/splash.component';
   ],
   bootstrap: [AppComponent],
 })
-class AppModule {}
-export { AppModule as default };
+export class AppModule {}
